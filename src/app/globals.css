@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --main-color: #888aff;
+  --primary-color: #6bcbb8;
+  --secondary-color: #005d63;
+  --tertiary-color: #ff8958;
+  --background-color: #1b1b1b;
+  --light: #fff;
+  --font-XXL: 3rem;
+  --font-XL: 2rem;
+  --font-L: 1.5rem;
+  --font-M: 1rem;
+  --font-ML: 1.25rem;
+  --font-MS: 0.875rem;
+  --font-MSS: 0.8rem;
+  --font-S: 0.7rem;
+  --font-montserrat-regular: "Montserrat Regular", sans-serif;
+  --font-montserrat-bold: "Montserrat Bold", sans-serif;
+}
+
+*,
+::after,
+::before {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background-color);
+  color: var(--light);
+  font-family: var(--font-montserrat-regular);
+  z-index: 0;
+  margin: 0;
+  min-height: 100vh;
+  font-size: 16px;
+}
+
+h1,
+h2 {
+  padding: 0;
+  margin: 0;
+}
+
+ol,
+ul,
+li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+}
+
+button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+a,
+:visited {
+  text-decoration: none;
+  color: inherit;
+}
+
+&::-webkit-scrollbar {
+  width: 8px;
+}
+
+&::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+&::-webkit-scrollbar-thumb {
+  background-color: var(--main-color);
+  border-radius: 10px;
+  border: 3px solid var(--main-color);
+}
+
+&::-webkit-scrollbar-thumb:hover {
+  background-color: var(--main-color);
+}
