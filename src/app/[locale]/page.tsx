@@ -1,5 +1,17 @@
-export default function Home() {
+import SolarPanelLayout from "@/app/components/SolarPlant/SolarPlant";
+
+const HomePage: React.FC = () => {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24"></main>
+    <section className="w-full h-screen flex flex-col items-center justify-center overflow-hidden pt-24">
+      <section className="w-full h-fit">
+        <div className="w-full"></div>
+        <div className="w-full">
+          <h1 className="text-4xl font-bold p-5">Solar Plant</h1>
+          <SolarPanelLayout />
+        </div>
+      </section>
+    </section>
   );
-}
+};
+
+export default HomePage;

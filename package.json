@@ -1,5 +1,5 @@
 {
-  "name": "yaguarete-next",
+  "name": "solar-plant",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,12 +14,14 @@
     "next-intl": "^3.26.1",
     "react": "^18",
     "react-dom": "^18",
-    "react-i18next": "^15.2.0"
+    "react-i18next": "^15.2.0",
+    "three": "^0.178.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.178.1",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",

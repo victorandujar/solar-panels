@@ -5,8 +5,8 @@ import type { Metadata } from "next";
 import { getMessages } from "../helpers/getMessages";
 
 export const metadata: Metadata = {
-  title: "Ammaëth",
-  description: "Diseñar es recordar lo que la materia olvidó.",
+  title: "Solar plant - prototype",
+  description: "Solar plant - prototype",
 };
 
 export default async function RootLayout({
