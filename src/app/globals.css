@@ -52,6 +52,168 @@ body::before {
   z-index: -1;
 }
 
+/* Energy Background Styles */
+.energy-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    rgba(136, 138, 255, 0.05) 0%,
+    rgba(107, 203, 184, 0.03) 25%,
+    rgba(0, 93, 99, 0.02) 50%,
+    rgba(255, 137, 88, 0.05) 75%,
+    rgba(136, 138, 255, 0.03) 100%
+  );
+}
+
+.energy-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.energy-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, var(--main-color) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: energyFloat var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+  left: var(--x);
+  top: var(--y);
+  opacity: 0.6;
+  box-shadow: 0 0 10px var(--main-color);
+}
+
+.energy-particle:nth-child(even) {
+  background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
+  box-shadow: 0 0 10px var(--primary-color);
+}
+
+.energy-particle:nth-child(3n) {
+  background: radial-gradient(
+    circle,
+    var(--tertiary-color) 0%,
+    transparent 70%
+  );
+  box-shadow: 0 0 10px var(--tertiary-color);
+}
+
+@keyframes energyFloat {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-40px) scale(0.8);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(-20px) scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+.energy-waves {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    transparent 30%,
+    rgba(136, 138, 255, 0.1) 40%,
+    transparent 70%
+  );
+  animation: wavePulse 8s ease-in-out infinite;
+}
+
+.wave-1 {
+  animation-delay: 0s;
+}
+
+.wave-2 {
+  animation-delay: 2.5s;
+  background: radial-gradient(
+    circle,
+    transparent 30%,
+    rgba(107, 203, 184, 0.08) 40%,
+    transparent 70%
+  );
+}
+
+.wave-3 {
+  animation-delay: 5s;
+  background: radial-gradient(
+    circle,
+    transparent 30%,
+    rgba(255, 137, 88, 0.06) 40%,
+    transparent 70%
+  );
+}
+
+@keyframes wavePulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+}
+
+.energy-grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+}
+
+.grid-svg {
+  width: 100%;
+  height: 100%;
+  animation: gridFlow 20s linear infinite;
+}
+
+@keyframes gridFlow {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-5px) translateY(-5px);
+  }
+  50% {
+    transform: translateX(5px) translateY(5px);
+  }
+  75% {
+    transform: translateX(-3px) translateY(3px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
 h1,
 h2 {
   padding: 0;

@@ -7,6 +7,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import solarData from "../../../utils/ObjEyeshot.json";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
+import GroupDetail3D from "../GroupDetail3D/GroupDetail3D";
 
 interface Point {
   X: number;
@@ -33,8 +34,23 @@ const SolarPanelLayout: React.FC = () => {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPanel, setSelectedPanel] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [legendData, setLegendData] = useState<
+    Array<{ key: string; color: string }>
+  >([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
+  const [panelMeshes, setPanelMeshes] = useState<THREE.Mesh[]>([]);
+  const [selectedPanels, setSelectedPanels] = useState<Set<string>>(new Set());
+  const [showGroupDetail, setShowGroupDetail] = useState(false);
+  const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
+  const [selectedGroupForDetail, setSelectedGroupForDetail] =
+    useState<string>("");
+
+  const colorPalette = [
+    0x4682b4, 0x32cd32, 0xffa500, 0x8a2be2, 0xff69b4, 0x20b2aa, 0xff6347,
+    0x1e90ff, 0x228b22, 0xffd700,
+  ];
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -184,7 +200,6 @@ const SolarPanelLayout: React.FC = () => {
     };
 
     controls.addEventListener("change", handleZoom);
-
     controlsRef.current = controls;
 
     const parcelPoints = parcela.map((p) => new THREE.Vector2(p.X, p.Y));
@@ -215,16 +230,18 @@ const SolarPanelLayout: React.FC = () => {
     const tiltRad = (tilt * Math.PI) / 180;
 
     const agrupacionKeys = Object.keys(agrupaciones);
-    const colorPalette = [
-      0x4682b4, 0x32cd32, 0xffa500, 0x8a2be2, 0xff69b4, 0x20b2aa, 0xff6347,
-      0x1e90ff, 0x228b22, 0xffd700,
-    ];
+
+    const legendItems = agrupacionKeys.map((key, idx) => {
+      const color = colorPalette[idx % colorPalette.length];
+      const colorHex = "#" + color.toString(16).padStart(6, "0");
+      return { key, color: colorHex };
+    });
+    setLegendData(legendItems);
 
     const panelGeometry = new THREE.PlaneGeometry(longitud, ancho);
-
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
     const panels: THREE.Mesh[] = [];
+
+    const groupMaterials = new Map<string, THREE.MeshStandardMaterial>();
 
     agrupacionKeys.forEach((key, idx) => {
       const color = colorPalette[idx % colorPalette.length];
@@ -236,6 +253,8 @@ const SolarPanelLayout: React.FC = () => {
         emissive: color,
         emissiveIntensity: 0.25,
       });
+      groupMaterials.set(key, panelMaterial);
+
       const points = agrupaciones[key];
       points.forEach((point, panelIdx) => {
         const panel = new THREE.Mesh(panelGeometry, panelMaterial);
@@ -255,18 +274,36 @@ const SolarPanelLayout: React.FC = () => {
       });
     });
 
+    setPanelMeshes(panels);
+
     const handleClick = (event: MouseEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(panels);
+      const raycaster = new THREE.Raycaster();
+      if (cameraRef.current) {
+        raycaster.setFromCamera(mouse, cameraRef.current);
+        const intersects = raycaster.intersectObjects(panelMeshes);
 
-      if (intersects.length > 0) {
-        const clickedPanel = intersects[0].object;
-        setSelectedPanel(clickedPanel.userData);
-        setIsModalOpen(true);
+        if (intersects.length > 0) {
+          const clickedPanel = intersects[0].object;
+          const userData = clickedPanel.userData;
+
+          const groupData = {
+            groupId: userData.groupId,
+            panelData: userData,
+            allPanelsInGroup: panelMeshes
+              .filter(
+                (panel) => (panel as any).userData.groupId === userData.groupId,
+              )
+              .map((panel) => (panel as any).userData),
+          };
+
+          setSelectedGroupData(groupData);
+          setShowGroupDetail(true);
+        }
       }
     };
 
@@ -307,6 +344,44 @@ const SolarPanelLayout: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (panelMeshes.length === 0) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      let highlightedCount = 0;
+
+      panelMeshes.forEach((panel) => {
+        const material = panel.material as THREE.MeshStandardMaterial;
+        const userData = (panel as any).userData;
+        const panelId = userData.panelId;
+        const groupId = userData.groupId;
+
+        if (selectedPanels.has(panelId)) {
+          material.emissiveIntensity = 3.0;
+          material.opacity = 1;
+          material.transparent = true;
+          material.color.setHex(0xffff00);
+          highlightedCount++;
+        } else if (selectedGroup && groupId === selectedGroup) {
+          material.emissiveIntensity = 1.5;
+          material.opacity = 1;
+          material.transparent = true;
+        } else if (selectedGroup) {
+          material.emissiveIntensity = 0.1;
+          material.opacity = 0.9;
+          material.transparent = true;
+        } else {
+          material.emissiveIntensity = 0.25;
+          material.opacity = 1;
+          material.transparent = false;
+        }
+        material.needsUpdate = true;
+      });
+    });
+  }, [selectedGroup, selectedPanels]);
+
   return (
     <>
       <div
@@ -315,6 +390,99 @@ const SolarPanelLayout: React.FC = () => {
         style={{ overflow: "hidden" }}
       />
 
+      <div className="absolute top-32 left-5 border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-black z-10">
+        <h3 className="text-sm font-semibold mb-3 flex items-center text-gray-800 drop-shadow-sm">
+          <svg
+            className="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
+            />
+          </svg>
+          Agrupaciones
+        </h3>
+
+        <div className="mb-4">
+          <select
+            value={selectedGroup}
+            onChange={(e) => {
+              const groupId = e.target.value;
+              setSelectedGroup(groupId);
+              if (groupId) {
+                const groupPanels = panelMeshes
+                  .filter(
+                    (panel) => (panel as any).userData.groupId === groupId,
+                  )
+                  .map((panel) => (panel as any).userData);
+
+                setSelectedGroupData({
+                  groupId: groupId,
+                  allPanelsInGroup: groupPanels,
+                });
+                setSelectedGroupForDetail(groupId);
+                setShowGroupDetail(true);
+              } else {
+                setShowGroupDetail(false);
+                setSelectedGroupData(null);
+                setSelectedGroupForDetail("");
+              }
+            }}
+            className="w-full px-3 py-2 text-xs bg-white/20 border border-white/30 rounded-lg text-gray-800 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            <option value="">Todas las agrupaciones</option>
+            {legendData.map((item) => (
+              <option key={item.key} value={item.key}>
+                Grupo {item.key}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="text-xs text-gray-600 mb-2">
+          • Selecciona un grupo para ver detalles en el popup
+        </div>
+
+        <div className="space-y-2 max-h-90 overflow-y-auto">
+          {legendData.map((item) => (
+            <div
+              key={item.key}
+              className={`flex items-center space-x-3 text-xs p-2 rounded-lg transition-all duration-200 ${
+                selectedGroup === item.key
+                  ? "bg-white/30 border border-white/50"
+                  : "hover:bg-white/10"
+              }`}
+            >
+              <div
+                className="w-4 h-4 rounded border border-white/50 shadow-sm"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="font-medium text-gray-800 drop-shadow-sm">
+                Grupo {item.key}
+              </span>
+              {selectedGroup === item.key && (
+                <svg
+                  className="w-3 h-3 ml-auto text-blue-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -322,6 +490,23 @@ const SolarPanelLayout: React.FC = () => {
       >
         {selectedPanel && <SolarPanelDetail panelData={selectedPanel} />}
       </Modal>
+
+      {showGroupDetail && selectedGroupData && (
+        <>
+          <GroupDetail3D
+            groupData={selectedGroupData}
+            selectedPanels={selectedPanels}
+            onClose={() => {
+              setShowGroupDetail(false);
+              setSelectedGroupData(null);
+              setSelectedPanels(new Set());
+            }}
+            onPanelSelect={(panelIds: Set<string>) => {
+              setSelectedPanels(panelIds);
+            }}
+          />
+        </>
+      )}
     </>
   );
 };
