@@ -266,13 +266,13 @@ const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gradient-to-br from-gray-900 via-gray-500 to-gray-800 rounded-lg p-6 shadow-2xl border border-cyan-500/20">
+      <div className="bg-gradient-to-br from-gray-900 via-gray-500 to-gray-800 rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="h-[250px] w-full">
               <div
                 ref={mountRef}
-                className="border border-gray-500/30 rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 shadow-inner w-full h-full"
+                className="border border-gray-500/30 rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 backdrop-blur-md shadow-inner w-full h-full"
               />
             </div>
           </div>

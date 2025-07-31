@@ -7,7 +7,7 @@
   --primary-color: #6bcbb8;
   --secondary-color: #005d63;
   --tertiary-color: #ff8958;
-  --background-color: #1b1b1b;
+  --background-color: #ffffff;
   --light: #fff;
   --font-XXL: 3rem;
   --font-XL: 2rem;
@@ -30,11 +30,26 @@
 body {
   background: var(--background-color);
   color: var(--light);
-  font-family: var(--font-montserrat-regular);
-  z-index: 0;
+  font-family: "PPTelegraf", sans-serif;
   margin: 0;
   min-height: 100vh;
-  font-size: 16px;
+  font-size: var(--font-M);
+  overflow-x: hidden;
+  font-weight: 400;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: -1;
 }
 
 h1,
