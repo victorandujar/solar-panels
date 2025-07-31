@@ -40,7 +40,7 @@ const SolarPanelLayout: React.FC = () => {
     if (!mountRef.current) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
+    scene.background = null;
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(
@@ -51,7 +51,10 @@ const SolarPanelLayout: React.FC = () => {
     );
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
