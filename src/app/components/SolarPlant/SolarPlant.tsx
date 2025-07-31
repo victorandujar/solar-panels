@@ -285,24 +285,14 @@ const SolarPanelLayout: React.FC = () => {
       const raycaster = new THREE.Raycaster();
       if (cameraRef.current) {
         raycaster.setFromCamera(mouse, cameraRef.current);
-        const intersects = raycaster.intersectObjects(panelMeshes);
+        const intersects = raycaster.intersectObjects(panels);
 
         if (intersects.length > 0) {
           const clickedPanel = intersects[0].object;
           const userData = clickedPanel.userData;
 
-          const groupData = {
-            groupId: userData.groupId,
-            panelData: userData,
-            allPanelsInGroup: panelMeshes
-              .filter(
-                (panel) => (panel as any).userData.groupId === userData.groupId,
-              )
-              .map((panel) => (panel as any).userData),
-          };
-
-          setSelectedGroupData(groupData);
-          setShowGroupDetail(true);
+          setSelectedPanel(userData);
+          setIsModalOpen(true);
         }
       }
     };
@@ -380,7 +370,7 @@ const SolarPanelLayout: React.FC = () => {
         material.needsUpdate = true;
       });
     });
-  }, [selectedGroup, selectedPanels]);
+  }, [panelMeshes, selectedGroup, selectedPanels]);
 
   return (
     <>
@@ -448,7 +438,7 @@ const SolarPanelLayout: React.FC = () => {
           • Selecciona un grupo para ver detalles en el popup
         </div>
 
-        <div className="space-y-2 max-h-90 overflow-y-auto">
+        <div className="space-y-2 max-h-90 md:h-64 2xl:h-full overflow-y-auto">
           {legendData.map((item) => (
             <div
               key={item.key}
