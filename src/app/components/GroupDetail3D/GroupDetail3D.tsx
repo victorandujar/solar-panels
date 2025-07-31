@@ -231,7 +231,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
   };
 
   return (
-    <div className="fixed top-32 right-4 w-[600px] h-[85vh] flex flex-col justify-between bg-white/95 backdrop-blur-lg rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-[9999]">
+    <div className="fixed top-32 right-4 w-[600px] md:h-[78vh] 2xl:w-[85vh] h-[85vh] flex flex-col justify-between bg-white/10 backdrop-blur-lg rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-[9999] overflow-y-auto">
       <div className="bg-black text-white p-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Grupo {groupData.groupId}</h2>
@@ -259,7 +259,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
         </p>
       </div>
 
-      <div className="p-4 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
+      <div className="p-4 ">
         <div ref={mountRef} className="w-full  rounded-lg bg-gray-50"></div>
 
         <div className="mb-4 p-3 bg-gray-50 rounded-lg text-black">
@@ -298,7 +298,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
           </div>
         </div>
 
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-black font-bold">
           <p>• Haz clic en las placas para seleccionarlas individualmente</p>
           <p>• Usa los inputs para seleccionar un rango de placas</p>
           <p>• Placas seleccionadas: {selectedPanels.size}</p>
