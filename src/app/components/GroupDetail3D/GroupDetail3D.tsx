@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, createElement } from "react";
+import { Canvas, ThreeEvent } from "@react-three/fiber";
+import { OrthographicCamera } from "@react-three/drei";
 import * as THREE from "three";
 
 interface PanelData {
@@ -19,42 +21,126 @@ interface GroupDetail3DProps {
   onClose: () => void;
 }
 
-const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
+interface GroupPanelProps {
+  panelData: PanelData;
+  index: number;
+  isSelected: boolean;
+  onPanelClick: (panelId: string) => void;
+  localPosition: [number, number, number];
+}
+
+const GroupPanel: React.FC<GroupPanelProps> = ({
+  panelData,
+  index,
+  isSelected,
+  onPanelClick,
+  localPosition,
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  const handleClick = (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    onPanelClick(panelData.panelId);
+  };
+
+  const numberTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
+    canvas.width = 256;
+    canvas.height = 128;
+
+    context.fillStyle = "rgba(255, 255, 255, 0.95)";
+    context.fillRect(0, 0, 256, 128);
+    context.strokeStyle = "rgba(0, 0, 0, 0.9)";
+    context.lineWidth = 4;
+    context.strokeRect(4, 4, 248, 120);
+
+    context.shadowColor = "rgba(0, 0, 0, 0.7)";
+    context.shadowBlur = 6;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+
+    context.fillStyle = "rgba(0, 0, 0, 0.95)";
+    context.font = "bold 48px Arial";
+    context.textAlign = "center";
+    context.fillText(`${index + 1}`, 128, 85);
+
+    return new THREE.CanvasTexture(canvas);
+  }, [index]);
+
+  return (
+    <>
+      {createElement(
+        "mesh" as any,
+        {
+          ref: meshRef,
+          position: localPosition,
+          rotation: [0, 0, 0],
+          scale: [
+            panelData.dimensions.length * 0.9,
+            panelData.dimensions.width * 0.9,
+            1,
+          ],
+          onClick: handleClick,
+          userData: panelData,
+        },
+        createElement("planeGeometry" as any, { args: [1, 1] }),
+        createElement("meshStandardMaterial" as any, {
+          color: isSelected ? 0xffff00 : 0x4682b4,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: isSelected ? 1 : 0.9,
+        }),
+      )}
+
+      {createElement(
+        "sprite" as any,
+        {
+          position: [localPosition[0], localPosition[1], 1],
+          scale: [2, 1, 1],
+        },
+        createElement("spriteMaterial" as any, {
+          map: numberTexture,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false,
+        }),
+      )}
+    </>
+  );
+};
+
+interface GroupSceneProps {
+  groupData: {
+    groupId: string;
+    allPanelsInGroup: PanelData[];
+  };
+  selectedPanels: Set<string>;
+  onPanelSelect: (panelIds: Set<string>) => void;
+}
+
+const GroupScene: React.FC<GroupSceneProps> = ({
   groupData,
   selectedPanels,
   onPanelSelect,
-  onClose,
 }) => {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const panelMeshesRef = useRef<THREE.Mesh[]>([]);
+  const handlePanelClick = (panelId: string) => {
+    const newSelectedPanels = new Set(selectedPanels);
+    if (newSelectedPanels.has(panelId)) {
+      newSelectedPanels.delete(panelId);
+    } else {
+      newSelectedPanels.add(panelId);
+    }
+    onPanelSelect(newSelectedPanels);
+  };
 
-  const [rangeStart, setRangeStart] = useState<string>("");
-  const [rangeEnd, setRangeEnd] = useState<string>("");
-
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    const scene = new THREE.Scene();
-    scene.background = null;
-    sceneRef.current = scene;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(500, 400);
-    renderer.setClearColor(0x000000, 0);
-    mountRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    directionalLight.position.set(5, 10, 5);
-    scene.add(directionalLight);
-    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight2.position.set(-5, 5, -5);
-    scene.add(directionalLight2);
+  const { centerX, centerY, frustumSize } = useMemo(() => {
+    if (
+      !groupData.allPanelsInGroup ||
+      groupData.allPanelsInGroup.length === 0
+    ) {
+      return { centerX: 0, centerY: 0, frustumSize: 10 };
+    }
 
     const positions = groupData.allPanelsInGroup.map((p) => p.position);
     const minX = Math.min(...positions.map((p) => p.x));
@@ -66,143 +152,72 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
     const centerY = (minY + maxY) / 2;
     const groupWidth = maxX - minX;
     const groupHeight = maxY - minY;
-    const groupSize = Math.max(groupWidth, groupHeight);
 
-    const aspectRatio = 500 / 400;
-    const frustumSize = groupSize * 1.2;
-    const camera = new THREE.OrthographicCamera(
-      (frustumSize * aspectRatio) / -2,
-      (frustumSize * aspectRatio) / 2,
-      frustumSize / 2,
-      frustumSize / -2,
-      0.1,
-      1000,
-    );
+    const safeWidth = Math.max(groupWidth, 1);
+    const safeHeight = Math.max(groupHeight, 1);
+    const groupSize = Math.max(safeWidth, safeHeight);
 
-    camera.position.set(centerX, centerY, 10);
-    camera.lookAt(centerX, centerY, 0);
-    camera.up.set(0, 1, 0);
-    cameraRef.current = camera;
+    const frustumSize = Math.max(1, groupSize * 1.15);
 
-    const panelMeshes: THREE.Mesh[] = [];
-    const panelGeometry = new THREE.PlaneGeometry(1, 1);
+    return { centerX, centerY, frustumSize };
+  }, [groupData]);
 
-    groupData.allPanelsInGroup.forEach((panelData, index) => {
-      const material = new THREE.MeshStandardMaterial({
-        color: selectedPanels.has(panelData.panelId) ? 0xffff00 : 0x4682b4,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: selectedPanels.has(panelData.panelId) ? 1 : 0.9,
-      });
+  const aspectRatio = 600 / 400;
+  const cameraZ = Math.max(15, frustumSize * 0.08);
 
-      const panel = new THREE.Mesh(panelGeometry, material);
+  return (
+    <>
+      {createElement("ambientLight" as any, { intensity: 0.8 })}
+      {createElement("directionalLight" as any, {
+        position: [5, 10, 5],
+        intensity: 1.0,
+      })}
+      {createElement("directionalLight" as any, {
+        position: [-5, 5, -5],
+        intensity: 0.5,
+      })}
 
-      panel.scale.set(
-        panelData.dimensions.length * 0.9,
-        panelData.dimensions.width * 0.9,
-        1,
-      );
+      <OrthographicCamera
+        makeDefault
+        left={(frustumSize * aspectRatio) / -2}
+        right={(frustumSize * aspectRatio) / 2}
+        top={frustumSize / 2}
+        bottom={frustumSize / -2}
+        near={0.1}
+        far={1000}
+        position={[0, 0, Math.max(30, cameraZ)]}
+        onUpdate={(camera) => {
+          camera.lookAt(0, 0, 0);
+          camera.up.set(0, 1, 0);
+        }}
+      />
 
-      panel.position.set(panelData.position.x, panelData.position.y, 0);
+      {groupData.allPanelsInGroup.map((panelData, index) => {
+        const localX = panelData.position.x - centerX;
+        const localY = panelData.position.y - centerY;
+        return (
+          <GroupPanel
+            key={panelData.panelId}
+            panelData={panelData}
+            index={index}
+            localPosition={[localX, localY, 0]}
+            isSelected={selectedPanels.has(panelData.panelId)}
+            onPanelClick={handlePanelClick}
+          />
+        );
+      })}
+    </>
+  );
+};
 
-      panel.rotation.set(0, 0, 0);
-
-      (panel as any).userData = panelData;
-
-      panelMeshes.push(panel);
-      scene.add(panel);
-
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d")!;
-      canvas.width = 256;
-      canvas.height = 128;
-
-      context.fillStyle = "rgba(255, 255, 255, 0.95)";
-      context.fillRect(0, 0, 256, 128);
-      context.strokeStyle = "rgba(0, 0, 0, 0.9)";
-      context.lineWidth = 4;
-      context.strokeRect(4, 4, 248, 120);
-
-      context.shadowColor = "rgba(0, 0, 0, 0.7)";
-      context.shadowBlur = 6;
-      context.shadowOffsetX = 2;
-      context.shadowOffsetY = 2;
-
-      context.fillStyle = "rgba(0, 0, 0, 0.95)";
-      context.font = "bold 48px Arial";
-      context.textAlign = "center";
-      context.fillText(`${index + 1}`, 128, 85);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const textMaterial = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        depthTest: false,
-        depthWrite: false,
-      });
-      const sprite = new THREE.Sprite(textMaterial);
-      sprite.position.set(panelData.position.x, panelData.position.y, 1);
-      sprite.scale.set(2, 1, 1);
-      scene.add(sprite);
-    });
-
-    panelMeshesRef.current = panelMeshes;
-
-    const handleClick = (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      const mouse = new THREE.Vector2();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(panelMeshes);
-
-      if (intersects.length > 0) {
-        const clickedPanel = intersects[0].object;
-        const userData = clickedPanel.userData;
-        const panelId = userData.panelId;
-
-        const newSelectedPanels = new Set(selectedPanels);
-        if (newSelectedPanels.has(panelId)) {
-          newSelectedPanels.delete(panelId);
-        } else {
-          newSelectedPanels.add(panelId);
-        }
-        onPanelSelect(newSelectedPanels);
-      }
-    };
-
-    renderer.domElement.addEventListener("click", handleClick);
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      renderer.domElement.removeEventListener("click", handleClick);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-    };
-  }, [groupData, selectedPanels, onPanelSelect]);
-
-  useEffect(() => {
-    panelMeshesRef.current.forEach((panel) => {
-      const material = panel.material as THREE.MeshStandardMaterial;
-      const userData = (panel as any).userData;
-
-      if (selectedPanels.has(userData.panelId)) {
-        material.color.setHex(0xffff00);
-        material.opacity = 1;
-      } else {
-        material.color.setHex(0x4682b4);
-        material.opacity = 0.8;
-      }
-    });
-  }, [selectedPanels]);
+const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
+  groupData,
+  selectedPanels,
+  onPanelSelect,
+  onClose,
+}) => {
+  const [rangeStart, setRangeStart] = useState<string>("");
+  const [rangeEnd, setRangeEnd] = useState<string>("");
 
   const handleRangeSelect = () => {
     if (!rangeStart || !rangeEnd) return;
@@ -259,8 +274,22 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
         </p>
       </div>
 
-      <div className="p-4 ">
-        <div ref={mountRef} className="w-full  rounded-lg bg-gray-50"></div>
+      <div className="p-4">
+        <div className="w-full h-[400px] rounded-lg bg-gray-50 overflow-hidden">
+          <Canvas
+            gl={{
+              antialias: true,
+              alpha: true,
+            }}
+            style={{ background: "transparent" }}
+          >
+            <GroupScene
+              groupData={groupData}
+              selectedPanels={selectedPanels}
+              onPanelSelect={onPanelSelect}
+            />
+          </Canvas>
+        </div>
 
         <div className="mb-4 p-3 bg-gray-50 rounded-lg text-black">
           <h3 className="text-sm font-semibold mb-2 text-gray-800">
