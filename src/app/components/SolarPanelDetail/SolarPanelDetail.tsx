@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useMemo, useRef, createElement } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 interface SolarPanelDetailProps {
@@ -13,267 +15,348 @@ interface SolarPanelDetailProps {
   };
 }
 
-const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+interface SolarCellProps {
+  position: [number, number, number];
+  width: number;
+  height: number;
+}
 
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a1a);
-    sceneRef.current = scene;
-
-    const container = mountRef.current;
-    const containerWidth = container.clientWidth || 300;
-    const containerHeight = container.clientHeight || 200;
-
-    const aspectRatio = containerWidth / containerHeight;
-    const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
-    camera.position.set(7, 4, 10);
-    camera.lookAt(0, 0, 0);
-    cameraRef.current = camera;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-    renderer.setSize(containerWidth, containerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setClearColor(0x0a0a1a, 1);
-    mountRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
-
-    const ambientLight = new THREE.AmbientLight(0x001122, 0.4);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0x00aaff, 1.5);
-    directionalLight.position.set(6, 8, 6);
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
-
-    const pointLight1 = new THREE.PointLight(0x00ffff, 2.0, 10);
-    pointLight1.position.set(0, 4, 0);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(0x0088ff, 1.5, 8);
-    pointLight2.position.set(4, 0, 4);
-    scene.add(pointLight2);
-
-    const { length, width } = panelData.dimensions;
-
-    const panelGroup = new THREE.Group();
-
-    const panelGeometry = new THREE.BoxGeometry(length, width, 0.05);
-    const panelMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0a0a0a,
-      metalness: 0.8,
-      roughness: 0.1,
+const SolarCell: React.FC<SolarCellProps> = ({ position, width, height }) => {
+  return createElement(
+    "mesh" as any,
+    { position },
+    createElement("planeGeometry" as any, {
+      args: [width * 0.9, height * 0.9],
+    }),
+    createElement("meshStandardMaterial" as any, {
+      color: 0x00ffff,
+      emissive: 0x00ffff,
+      emissiveIntensity: 0.4,
       transparent: true,
       opacity: 0.9,
-    });
+    }),
+  );
+};
 
-    const panel = new THREE.Mesh(panelGeometry, panelMaterial);
-    panel.castShadow = true;
-    panel.receiveShadow = true;
-    panelGroup.add(panel);
+interface AnimatedParticleProps {
+  initialPosition: [number, number, number];
+  index: number;
+}
 
-    const frontSurfaceGeometry = new THREE.PlaneGeometry(length, width);
-    const glassMaterial = new THREE.MeshStandardMaterial({
-      color: 0x001122,
-      metalness: 0.5,
-      roughness: 0.05,
-      transparent: true,
-      opacity: 0.5,
-      side: THREE.DoubleSide,
-    });
+const AnimatedParticle: React.FC<AnimatedParticleProps> = ({
+  initialPosition,
+  index,
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
 
-    const frontSurface = new THREE.Mesh(frontSurfaceGeometry, glassMaterial);
-    frontSurface.position.set(0, 0, 0.026);
-    panelGroup.add(frontSurface);
-
-    const cellRows = 6;
-    const cellCols = 10;
-    const cellWidth = length / cellCols;
-    const cellHeight = width / cellRows;
-
-    for (let row = 0; row < cellRows; row++) {
-      for (let col = 0; col < cellCols; col++) {
-        const cellGeometry = new THREE.PlaneGeometry(
-          cellWidth * 0.9,
-          cellHeight * 0.9,
-        );
-        const cellMaterial = new THREE.MeshStandardMaterial({
-          color: 0x00ffff,
-          emissive: 0x00ffff,
-          emissiveIntensity: 0.4,
-          transparent: true,
-          opacity: 0.9,
-        });
-
-        const cell = new THREE.Mesh(cellGeometry, cellMaterial);
-        const x = (col - cellCols / 2 + 0.5) * cellWidth;
-        const y = (row - cellRows / 2 + 0.5) * cellHeight;
-        cell.position.set(x, y, 0.027);
-        panelGroup.add(cell);
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.position.y =
+        initialPosition[1] + Math.sin(Date.now() * 0.001 + index) * 0.0005;
+      if (meshRef.current.material) {
+        (meshRef.current.material as THREE.MeshStandardMaterial).opacity =
+          0.5 + Math.sin(Date.now() * 0.002 + index) * 0.3;
       }
     }
+  });
 
-    const gridGroup = new THREE.Group();
-
-    for (let i = 1; i < cellCols; i++) {
-      const x = (i - cellCols / 2) * cellWidth;
-      const lineGeometry = new THREE.BoxGeometry(0.002, width, 0.001);
-      const lineMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00ffff,
-        emissive: 0x00ffff,
-        emissiveIntensity: 0.8,
-        transparent: true,
-        opacity: 0.9,
-      });
-      const line = new THREE.Mesh(lineGeometry, lineMaterial);
-      line.position.set(x, 0, 0.028);
-      gridGroup.add(line);
-    }
-
-    for (let i = 1; i < cellRows; i++) {
-      const y = (i - cellRows / 2) * cellHeight;
-      const lineGeometry = new THREE.BoxGeometry(length, 0.002, 0.001);
-      const lineMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00ffff,
-        emissive: 0x00ffff,
-        emissiveIntensity: 0.8,
-        transparent: true,
-        opacity: 0.9,
-      });
-      const line = new THREE.Mesh(lineGeometry, lineMaterial);
-      line.position.set(0, y, 0.028);
-      gridGroup.add(line);
-    }
-
-    panelGroup.add(gridGroup);
-
-    const particleGroup = new THREE.Group();
-    const numParticles = 30;
-
-    for (let i = 0; i < numParticles; i++) {
-      const particleGeometry = new THREE.SphereGeometry(0.003, 8, 8);
-      const particleMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00ffff,
-        emissive: 0x00ffff,
-        emissiveIntensity: 1.0,
-        transparent: true,
-        opacity: 0.9,
-      });
-      const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-
-      const x = (Math.random() - 0.5) * length * 0.7;
-      const y = (Math.random() - 0.5) * width * 0.7;
-      particle.position.set(x, y, 0.029);
-      particleGroup.add(particle);
-    }
-
-    panelGroup.add(particleGroup);
-
-    const edgeGroup = new THREE.Group();
-
-    const topEdgeGeometry = new THREE.BoxGeometry(length, 0.02, 0.01);
-    const edgeMaterial = new THREE.MeshStandardMaterial({
+  return createElement(
+    "mesh" as any,
+    { ref: meshRef, position: initialPosition },
+    createElement("sphereGeometry" as any, { args: [0.003, 8, 8] }),
+    createElement("meshStandardMaterial" as any, {
       color: 0x00ffff,
       emissive: 0x00ffff,
       emissiveIntensity: 1.0,
-    });
-
-    const topEdge = new THREE.Mesh(topEdgeGeometry, edgeMaterial);
-    topEdge.position.set(0, width / 2, 0.03);
-    edgeGroup.add(topEdge);
-
-    const bottomEdge = new THREE.Mesh(topEdgeGeometry, edgeMaterial);
-    bottomEdge.position.set(0, -width / 2, 0.03);
-    edgeGroup.add(bottomEdge);
-
-    const sideEdgeGeometry = new THREE.BoxGeometry(0.02, width, 0.01);
-
-    const leftEdge = new THREE.Mesh(sideEdgeGeometry, edgeMaterial);
-    leftEdge.position.set(-length / 2, 0, 0.03);
-    edgeGroup.add(leftEdge);
-
-    const rightEdge = new THREE.Mesh(sideEdgeGeometry, edgeMaterial);
-    rightEdge.position.set(length / 2, 0, 0.03);
-    edgeGroup.add(rightEdge);
-
-    panelGroup.add(edgeGroup);
-
-    const legGroup = new THREE.Group();
-
-    const leftLegGeometry = new THREE.BoxGeometry(0.08, 0.08, 0.6);
-    const legMaterial = new THREE.MeshStandardMaterial({
-      color: 0x00ffff,
-      emissive: 0x00ffff,
-      emissiveIntensity: 0.3,
       transparent: true,
-      opacity: 0.7,
-    });
+      opacity: 0.9,
+    }),
+  );
+};
 
-    const leftLeg = new THREE.Mesh(leftLegGeometry, legMaterial);
-    leftLeg.position.set(-length / 2 + 0.15, -width / 2 + 0.15, -0.6);
-    legGroup.add(leftLeg);
+// Componente principal de la escena 3D del panel
+interface SolarPanelSceneProps {
+  panelData: SolarPanelDetailProps["panelData"];
+}
 
-    const rightLeg = new THREE.Mesh(leftLegGeometry, legMaterial);
-    rightLeg.position.set(length / 2 - 0.15, -width / 2 + 0.15, -0.35);
-    legGroup.add(rightLeg);
+const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
+  const groupRef = useRef<THREE.Group>(null);
 
-    const crossSupportGeometry = new THREE.BoxGeometry(
-      length - 0.3,
-      0.04,
-      0.04,
-    );
-    const crossSupport = new THREE.Mesh(crossSupportGeometry, legMaterial);
-    crossSupport.position.set(0, -width / 2 + 0.15, -0.65);
-    legGroup.add(crossSupport);
+  // Rotar el grupo principal
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += 0.003;
+    }
+  });
 
-    panelGroup.add(legGroup);
+  const { length, width } = panelData.dimensions;
+  const cellRows = 6;
+  const cellCols = 10;
+  const cellWidth = length / cellCols;
+  const cellHeight = width / cellRows;
 
-    panelGroup.rotation.x = (panelData.inclination * Math.PI) / 180;
-    scene.add(panelGroup);
+  // Generar posiciones de celdas
+  const cellPositions = useMemo(() => {
+    const positions: Array<[number, number, number]> = [];
+    for (let row = 0; row < cellRows; row++) {
+      for (let col = 0; col < cellCols; col++) {
+        const x = (col - cellCols / 2 + 0.5) * cellWidth;
+        const y = (row - cellRows / 2 + 0.5) * cellHeight;
+        positions.push([x, y, 0.027]);
+      }
+    }
+    return positions;
+  }, [cellRows, cellCols, cellWidth, cellHeight]);
 
-    const animate = () => {
-      requestAnimationFrame(animate);
+  // Generar posiciones de partículas
+  const particlePositions = useMemo(() => {
+    const positions: Array<[number, number, number]> = [];
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.random() - 0.5) * length * 0.7;
+      const y = (Math.random() - 0.5) * width * 0.7;
+      positions.push([x, y, 0.029]);
+    }
+    return positions;
+  }, [length, width]);
 
-      panelGroup.rotation.y += 0.003;
+  // Generar líneas de la grilla
+  const gridLines = useMemo(() => {
+    const lines = [];
 
-      particleGroup.children.forEach((particle, index) => {
-        particle.position.y += Math.sin(Date.now() * 0.001 + index) * 0.0005;
-        if (particle instanceof THREE.Mesh && particle.material) {
-          (particle.material as THREE.MeshStandardMaterial).opacity =
-            0.5 + Math.sin(Date.now() * 0.002 + index) * 0.3;
-        }
+    // Líneas verticales
+    for (let i = 1; i < cellCols; i++) {
+      const x = (i - cellCols / 2) * cellWidth;
+      lines.push({
+        type: "vertical",
+        position: [x, 0, 0.028] as [number, number, number],
+        geometry: [0.002, width, 0.001] as [number, number, number],
       });
+    }
 
-      if (rendererRef.current && sceneRef.current && cameraRef.current) {
-        rendererRef.current.render(sceneRef.current, cameraRef.current);
-      }
-    };
-    animate();
+    // Líneas horizontales
+    for (let i = 1; i < cellRows; i++) {
+      const y = (i - cellRows / 2) * cellHeight;
+      lines.push({
+        type: "horizontal",
+        position: [0, y, 0.028] as [number, number, number],
+        geometry: [length, 0.002, 0.001] as [number, number, number],
+      });
+    }
 
-    return () => {
-      if (mountRef.current && rendererRef.current) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
-      }
-    };
-  }, [panelData]);
+    return lines;
+  }, [cellRows, cellCols, cellWidth, cellHeight, length, width]);
 
+  return (
+    <>
+      {/* Luces */}
+      {createElement("ambientLight" as any, { args: [0x001122, 0.4] })}
+      {createElement("directionalLight" as any, {
+        args: [0x00aaff, 1.5],
+        position: [6, 8, 6],
+        castShadow: true,
+      })}
+      {createElement("pointLight" as any, {
+        args: [0x00ffff, 2.0, 10],
+        position: [0, 4, 0],
+      })}
+      {createElement("pointLight" as any, {
+        args: [0x0088ff, 1.5, 8],
+        position: [4, 0, 4],
+      })}
+
+      {/* Grupo principal del panel */}
+      {createElement(
+        "group" as any,
+        {
+          ref: groupRef,
+          rotation: [(panelData.inclination * Math.PI) / 180, 0, 0],
+        },
+        // Panel base
+        createElement(
+          "mesh" as any,
+          { castShadow: true, receiveShadow: true },
+          createElement("boxGeometry" as any, { args: [length, width, 0.05] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x0a0a0a,
+            metalness: 0.8,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.9,
+          }),
+        ),
+
+        // Superficie frontal de vidrio
+        createElement(
+          "mesh" as any,
+          { position: [0, 0, 0.026] },
+          createElement("planeGeometry" as any, { args: [length, width] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x001122,
+            metalness: 0.5,
+            roughness: 0.05,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide,
+          }),
+        ),
+
+        // Celdas solares
+        ...cellPositions.map((pos, index) =>
+          createElement(SolarCell, {
+            key: `cell-${index}`,
+            position: pos,
+            width: cellWidth,
+            height: cellHeight,
+          }),
+        ),
+
+        // Grilla de líneas
+        ...gridLines.map((line, index) =>
+          createElement(
+            "mesh" as any,
+            { key: `line-${index}`, position: line.position },
+            createElement("boxGeometry" as any, { args: line.geometry }),
+            createElement("meshStandardMaterial" as any, {
+              color: 0x00ffff,
+              emissive: 0x00ffff,
+              emissiveIntensity: 0.8,
+              transparent: true,
+              opacity: 0.9,
+            }),
+          ),
+        ),
+
+        // Partículas animadas
+        ...particlePositions.map((pos, index) =>
+          createElement(AnimatedParticle, {
+            key: `particle-${index}`,
+            initialPosition: pos,
+            index,
+          }),
+        ),
+
+        // Bordes del panel
+        createElement(
+          "mesh" as any,
+          { position: [0, width / 2, 0.03] },
+          createElement("boxGeometry" as any, { args: [length, 0.02, 0.01] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 1.0,
+          }),
+        ),
+        createElement(
+          "mesh" as any,
+          { position: [0, -width / 2, 0.03] },
+          createElement("boxGeometry" as any, { args: [length, 0.02, 0.01] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 1.0,
+          }),
+        ),
+        createElement(
+          "mesh" as any,
+          { position: [-length / 2, 0, 0.03] },
+          createElement("boxGeometry" as any, { args: [0.02, width, 0.01] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 1.0,
+          }),
+        ),
+        createElement(
+          "mesh" as any,
+          { position: [length / 2, 0, 0.03] },
+          createElement("boxGeometry" as any, { args: [0.02, width, 0.01] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 1.0,
+          }),
+        ),
+
+        // Soportes del panel
+        createElement(
+          "mesh" as any,
+          { position: [-length / 2 + 0.15, -width / 2 + 0.15, -0.6] },
+          createElement("boxGeometry" as any, { args: [0.08, 0.08, 0.6] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 0.3,
+            transparent: true,
+            opacity: 0.7,
+          }),
+        ),
+        createElement(
+          "mesh" as any,
+          { position: [length / 2 - 0.15, -width / 2 + 0.15, -0.35] },
+          createElement("boxGeometry" as any, { args: [0.08, 0.08, 0.6] }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 0.3,
+            transparent: true,
+            opacity: 0.7,
+          }),
+        ),
+        createElement(
+          "mesh" as any,
+          { position: [0, -width / 2 + 0.15, -0.65] },
+          createElement("boxGeometry" as any, {
+            args: [length - 0.3, 0.04, 0.04],
+          }),
+          createElement("meshStandardMaterial" as any, {
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 0.3,
+            transparent: true,
+            opacity: 0.7,
+          }),
+        ),
+      )}
+
+      <OrbitControls
+        enableDamping
+        dampingFactor={0.1}
+        minDistance={2}
+        maxDistance={20}
+        target={[0, 0, 0]}
+      />
+    </>
+  );
+};
+
+const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
   return (
     <div className="space-y-4">
       <div className="bg-transparent rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="h-[250px] w-full">
-              <div
-                ref={mountRef}
-                className="border border-gray-500/30 rounded-lg overflow-hidden bg-transparent backdrop-blur-md shadow-inner w-full h-full"
-              />
+              <div className="border border-gray-500/30 rounded-lg overflow-hidden bg-transparent backdrop-blur-md shadow-inner w-full h-full">
+                <Canvas
+                  camera={{
+                    fov: 75,
+                    near: 0.1,
+                    far: 1000,
+                    position: [7, 4, 10],
+                  }}
+                  gl={{
+                    antialias: true,
+                    alpha: true,
+                  }}
+                  scene={
+                    {
+                      background: new THREE.Color(0x0a0a1a),
+                    } as any
+                  }
+                >
+                  <SolarPanelScene panelData={panelData} />
+                </Canvas>
+              </div>
             </div>
           </div>
 
