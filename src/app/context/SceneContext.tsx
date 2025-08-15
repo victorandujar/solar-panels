@@ -48,7 +48,6 @@ export const SceneProvider: React.FC<{ children: ReactNode }> = ({
 
   const registerScene = useCallback((id: string, sceneData: SceneData) => {
     setScenes((prev) => {
-      // Solo actualizar si el contenido realmente cambió
       if (prev.has(id) && prev.get(id) === sceneData) {
         return prev;
       }

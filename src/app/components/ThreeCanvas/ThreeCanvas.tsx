@@ -22,17 +22,14 @@ const ThreeCanvas: React.FC = () => {
       eventSource={typeof window !== "undefined" ? document.body : undefined}
       eventPrefix="client"
     >
-      {/* Renderizar todas las escenas registradas */}
       {Array.from(scenes.entries()).map(([sceneId, sceneData]) => {
         if (sceneData.domRef) {
-          // Para escenas con domRef específico, usar View
           return (
             <View key={sceneId} index={1} track={sceneData.domRef}>
               {sceneData.content}
             </View>
           );
         } else {
-          // Para escenas sin domRef específico (fullscreen)
           return (
             <React.Fragment key={sceneId}>{sceneData.content}</React.Fragment>
           );
