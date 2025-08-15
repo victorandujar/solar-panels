@@ -1,6 +1,5 @@
 "use client";
 
-// src/components/GroupDetail3D.tsx
 import React, { useMemo, useRef, useState, createElement } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
@@ -247,6 +246,8 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
 
   const clearSelection = () => {
     onPanelSelect(new Set());
+    setRangeEnd("");
+    setRangeStart("");
   };
 
   return (
@@ -279,7 +280,6 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
       </div>
 
       <div className="flex-1 relative">
-        {/* Canvas independiente para el detalle del grupo */}
         <div className="absolute inset-0">
           <Canvas
             style={{ width: "100%", height: "100%" }}
@@ -293,7 +293,6 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
           </Canvas>
         </div>
 
-        {/* Overlay con información adicional */}
         <div
           className="absolute bottom-4 left-4 right-4"
           style={{ zIndex: 10 }}

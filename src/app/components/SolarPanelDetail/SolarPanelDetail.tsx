@@ -1,9 +1,8 @@
-// src/components/SolarPanelDetail.tsx
 "use client";
 
 import React, { useMemo, useRef, createElement, useEffect } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { View, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 interface SolarPanelDetailProps {
@@ -75,7 +74,6 @@ const AnimatedParticle: React.FC<AnimatedParticleProps> = ({
   );
 };
 
-// Componente principal de la escena 3D del panel
 interface SolarPanelSceneProps {
   panelData: SolarPanelDetailProps["panelData"];
 }
@@ -88,7 +86,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
     scene.background = new THREE.Color(0x0a0a1a);
   }, [scene]);
 
-  // Rotar el grupo principal
   useFrame(() => {
     if (groupRef.current) {
       groupRef.current.rotation.y += 0.003;
@@ -101,7 +98,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
   const cellWidth = length / cellCols;
   const cellHeight = width / cellRows;
 
-  // Generar posiciones de celdas
   const cellPositions = useMemo(() => {
     const positions: Array<[number, number, number]> = [];
     for (let row = 0; row < cellRows; row++) {
@@ -114,7 +110,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
     return positions;
   }, [cellRows, cellCols, cellWidth, cellHeight]);
 
-  // Generar posiciones de partículas
   const particlePositions = useMemo(() => {
     const positions: Array<[number, number, number]> = [];
     for (let i = 0; i < 30; i++) {
@@ -125,11 +120,9 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
     return positions;
   }, [length, width]);
 
-  // Generar líneas de la grilla
   const gridLines = useMemo(() => {
     const lines = [];
 
-    // Líneas verticales
     for (let i = 1; i < cellCols; i++) {
       const x = (i - cellCols / 2) * cellWidth;
       lines.push({
@@ -139,7 +132,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
       });
     }
 
-    // Líneas horizontales
     for (let i = 1; i < cellRows; i++) {
       const y = (i - cellRows / 2) * cellHeight;
       lines.push({
@@ -154,7 +146,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
 
   return (
     <>
-      {/* Luces */}
       {createElement("ambientLight" as any, { args: [0x001122, 0.4] })}
       {createElement("directionalLight" as any, {
         args: [0x00aaff, 1.5],
@@ -170,14 +161,12 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
         position: [4, 0, 4],
       })}
 
-      {/* Grupo principal del panel */}
       {createElement(
         "group" as any,
         {
           ref: groupRef,
           rotation: [(panelData.inclination * Math.PI) / 180, 0, 0],
         },
-        // Panel base
         createElement(
           "mesh" as any,
           { castShadow: true, receiveShadow: true },
@@ -191,7 +180,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
           }),
         ),
 
-        // Superficie frontal de vidrio
         createElement(
           "mesh" as any,
           { position: [0, 0, 0.026] },
@@ -206,7 +194,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
           }),
         ),
 
-        // Celdas solares
         ...cellPositions.map((pos, index) =>
           createElement(SolarCell, {
             key: `cell-${index}`,
@@ -216,7 +203,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
           }),
         ),
 
-        // Grilla de líneas
         ...gridLines.map((line, index) =>
           createElement(
             "mesh" as any,
@@ -232,7 +218,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
           ),
         ),
 
-        // Partículas animadas
         ...particlePositions.map((pos, index) =>
           createElement(AnimatedParticle, {
             key: `particle-${index}`,
@@ -241,7 +226,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
           }),
         ),
 
-        // Bordes del panel
         createElement(
           "mesh" as any,
           { position: [0, width / 2, 0.03] },
@@ -283,7 +267,6 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
           }),
         ),
 
-        // Soportes del panel
         createElement(
           "mesh" as any,
           { position: [-length / 2 + 0.15, -width / 2 + 0.15, -0.6] },
@@ -336,32 +319,24 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
 };
 
 const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
-  const containerRef = useRef<HTMLDivElement>(null!);
-
   return (
     <div className="space-y-4">
       <div className="bg-transparent rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="h-[250px] w-full">
-              <div
-                ref={containerRef}
-                className="border border-gray-500/30 rounded-lg overflow-hidden bg-transparent backdrop-blur-md shadow-inner w-full h-full"
-              >
-                <View
-                  track={containerRef}
-                  className="w-full h-full"
-                  style={{ pointerEvents: "auto" }}
+              <div className="border border-gray-500/30 rounded-lg overflow-hidden bg-transparent backdrop-blur-md shadow-inner w-full h-full">
+                <Canvas
+                  style={{ width: "100%", height: "100%" }}
+                  camera={{
+                    fov: 75,
+                    near: 0.1,
+                    far: 1000,
+                    position: [7, 4, 10],
+                  }}
                 >
-                  <PerspectiveCamera
-                    makeDefault
-                    fov={75}
-                    near={0.1}
-                    far={1000}
-                    position={[7, 4, 10]}
-                  />
                   <SolarPanelScene panelData={panelData} />
-                </View>
+                </Canvas>
               </div>
             </div>
           </div>

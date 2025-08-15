@@ -1,4 +1,3 @@
-// src/components/SolarPanelLayout.tsx
 "use client";
 
 import React, {
@@ -16,6 +15,7 @@ import solarData from "../../../utils/ObjEyeshot.json";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
 import GroupDetail3D from "../GroupDetail3D/GroupDetail3D";
+import GroupSelector from "../GroupSelector/GroupSelector";
 import { useRegisterScene } from "../../hooks/useRegisterScene";
 
 interface Point {
@@ -279,7 +279,9 @@ interface SolarPlantSceneProps {
   selectedGroup: string;
   selectedPanels: Set<string>;
   onPanelClick: (panelData: any) => void;
-  onCameraUpdate: (legendData: Array<{ key: string; color: string }>) => void;
+  onCameraUpdate: (
+    legendData: Array<{ key: string; color: string; count: number }>,
+  ) => void;
 }
 
 const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
@@ -321,7 +323,8 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
     const legendItems = agrupacionKeys.map((key, idx) => {
       const color = colorPalette[idx % colorPalette.length];
       const colorHex = "#" + color.toString(16).padStart(6, "0");
-      return { key, color: colorHex };
+      const count = agrupaciones[key].length;
+      return { key, color: colorHex, count };
     });
 
     const tiltRad = (tilt * Math.PI) / 180;
@@ -397,7 +400,7 @@ const SolarPanelLayout: React.FC = () => {
   const [selectedPanel, setSelectedPanel] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [legendData, setLegendData] = useState<
-    Array<{ key: string; color: string }>
+    Array<{ key: string; color: string; count: number }>
   >([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [selectedPanels, setSelectedPanels] = useState<Set<string>>(new Set());
@@ -414,7 +417,7 @@ const SolarPanelLayout: React.FC = () => {
   }, []);
 
   const handleCameraUpdate = useCallback(
-    (legendData: Array<{ key: string; color: string }>) => {
+    (legendData: Array<{ key: string; color: string; count: number }>) => {
       setLegendData(legendData);
     },
     [],
@@ -531,85 +534,17 @@ const SolarPanelLayout: React.FC = () => {
     <>
       <div
         ref={rootRef}
-        className={`h-screen overflow-hidden relative transition-all duration-300 ${
+        className={`h-screen overflow-hidden relative transition-all duration-300 font-mono ${
           showGroupDetail ? "w-1/2" : "w-full"
         }`}
         style={{ pointerEvents: "auto" }}
-      >
-        {/* El contenido 3D ahora se renderiza en el Canvas global */}
-      </div>
+      ></div>
 
-      <div className="absolute top-32 left-5 border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-black z-10">
-        <h3 className="text-sm font-semibold mb-3 flex items-center text-gray-800 drop-shadow-sm">
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
-            />
-          </svg>
-          Agrupaciones
-        </h3>
-
-        <div className="mb-4">
-          <select
-            value={selectedGroup}
-            onChange={(e) => handleGroupChange(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-white/20 border border-white/30 rounded-lg text-gray-800 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          >
-            <option value="">Todas las agrupaciones</option>
-            {legendData.map((item) => (
-              <option key={item.key} value={item.key}>
-                Grupo {item.key}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="text-xs text-gray-600 mb-2">
-          • Selecciona un grupo para ver detalles en el popup
-        </div>
-
-        <div className="space-y-2 max-h-90 md:h-64 2xl:h-full overflow-y-auto">
-          {legendData.map((item) => (
-            <div
-              key={item.key}
-              className={`flex items-center space-x-3 text-xs p-2 rounded-lg transition-all duration-200 ${
-                selectedGroup === item.key
-                  ? "bg-white/30 border border-white/50"
-                  : "hover:bg-white/10"
-              }`}
-            >
-              <div
-                className="w-4 h-4 rounded border border-white/50 shadow-sm"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="font-medium text-gray-800 drop-shadow-sm">
-                Grupo {item.key}
-              </span>
-              {selectedGroup === item.key && (
-                <svg
-                  className="w-3 h-3 ml-auto text-blue-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <GroupSelector
+        legendData={legendData}
+        selectedGroup={selectedGroup}
+        onGroupChange={handleGroupChange}
+      />
 
       <Modal
         isOpen={isModalOpen}
@@ -627,6 +562,7 @@ const SolarPanelLayout: React.FC = () => {
             setShowGroupDetail(false);
             setSelectedGroupData(null);
             setSelectedPanels(new Set());
+            setSelectedGroup("");
           }}
           onPanelSelect={(panelIds: Set<string>) => {
             setSelectedPanels(panelIds);

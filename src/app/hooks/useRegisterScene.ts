@@ -21,17 +21,14 @@ interface SceneData {
 export function useRegisterScene(id: string, sceneData: SceneData) {
   const { registerScene, unregisterScene } = useSceneContext();
 
-  // Usar useRef para mantener una referencia estable
   const sceneDataRef = useRef<SceneData>(sceneData);
   const lastIdRef = useRef<string | null>(null);
 
-  // Actualizar la referencia cuando cambie sceneData
   useEffect(() => {
     sceneDataRef.current = sceneData;
   }, [sceneData]);
 
   useEffect(() => {
-    // Registrar o actualizar la escena
     registerScene(id, sceneDataRef.current);
     lastIdRef.current = id;
 
@@ -44,7 +41,6 @@ export function useRegisterScene(id: string, sceneData: SceneData) {
   }, [id, registerScene, unregisterScene]);
 }
 
-// Hook de conveniencia para escenas simples (compatibilidad hacia atrás)
 export function useRegisterSimpleScene(id: string, content: ReactNode) {
   useRegisterScene(id, { content });
 }

@@ -8,6 +8,13 @@ import EnergyBackground from "../components/EnergyBackground/EnergyBackground";
 import ThreeCanvas from "../components/ThreeCanvas/ThreeCanvas";
 import { SceneProvider } from "../context/SceneContext";
 
+import { Audiowide } from "next/font/google";
+
+const font = Audiowide({
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export const metadata: Metadata = {
   title: "Solar plant - prototype",
   description: "Solar plant - prototype",
@@ -23,11 +30,9 @@ export default async function RootLayout({
   const { locale } = await params;
   const messages = await getMessages(locale, notFound);
 
-  // Nota: Como RootLayout es un Server Component, no puedes usar useRef directamente.
-  // Usamos un div con id para el eventSource y manejamos el ref en el cliente.
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`antialiased ${font.className}`}>
         <div id="root-container" className="relative w-full h-screen">
           <SceneProvider>
             <ThreeCanvas />

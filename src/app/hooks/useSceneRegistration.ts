@@ -45,16 +45,13 @@ export function useSceneRegistration({
   useEffect(() => {
     if (!enabledRef.current) return;
 
-    // Registrar la escena
     registerScene(sceneId, scene, camera, viewportRef.current);
 
-    // Cleanup: desregistrar la escena
     return () => {
       unregisterScene(sceneId);
     };
   }, [sceneId, scene, camera]);
 
-  // Función para actualizar el viewport
   const updateViewport = (newViewport: THREE.Vector4) => {
     viewportRef.current = newViewport;
     updateSceneViewport(sceneId, newViewport);
