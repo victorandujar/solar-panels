@@ -1,8 +1,9 @@
+// src/components/SolarPanelDetail.tsx
 "use client";
 
-import React, { useMemo, useRef, createElement } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import React, { useMemo, useRef, createElement, useEffect } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { View, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
 
 interface SolarPanelDetailProps {
@@ -81,6 +82,11 @@ interface SolarPanelSceneProps {
 
 const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const { scene } = useThree();
+
+  useEffect(() => {
+    scene.background = new THREE.Color(0x0a0a1a);
+  }, [scene]);
 
   // Rotar el grupo principal
   useFrame(() => {
@@ -330,32 +336,32 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
 };
 
 const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
+  const containerRef = useRef<HTMLDivElement>(null!);
+
   return (
     <div className="space-y-4">
       <div className="bg-transparent rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="h-[250px] w-full">
-              <div className="border border-gray-500/30 rounded-lg overflow-hidden bg-transparent backdrop-blur-md shadow-inner w-full h-full">
-                <Canvas
-                  camera={{
-                    fov: 75,
-                    near: 0.1,
-                    far: 1000,
-                    position: [7, 4, 10],
-                  }}
-                  gl={{
-                    antialias: true,
-                    alpha: true,
-                  }}
-                  scene={
-                    {
-                      background: new THREE.Color(0x0a0a1a),
-                    } as any
-                  }
+              <div
+                ref={containerRef}
+                className="border border-gray-500/30 rounded-lg overflow-hidden bg-transparent backdrop-blur-md shadow-inner w-full h-full"
+              >
+                <View
+                  track={containerRef}
+                  className="w-full h-full"
+                  style={{ pointerEvents: "auto" }}
                 >
+                  <PerspectiveCamera
+                    makeDefault
+                    fov={75}
+                    near={0.1}
+                    far={1000}
+                    position={[7, 4, 10]}
+                  />
                   <SolarPanelScene panelData={panelData} />
-                </Canvas>
+                </View>
               </div>
             </div>
           </div>
