@@ -1,3 +1,4 @@
+// src/components/SolarPanelLayout.tsx
 "use client";
 
 import React, {
@@ -6,14 +7,16 @@ import React, {
   useMemo,
   useCallback,
   createElement,
+  useEffect,
 } from "react";
-import { Canvas, ThreeEvent, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { ThreeEvent, useThree } from "@react-three/fiber";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
 import solarData from "../../../utils/ObjEyeshot.json";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
 import GroupDetail3D from "../GroupDetail3D/GroupDetail3D";
+import { useRegisterScene } from "../../hooks/useRegisterScene";
 
 interface Point {
   X: number;
@@ -401,6 +404,8 @@ const SolarPanelLayout: React.FC = () => {
   const [showGroupDetail, setShowGroupDetail] = useState(false);
   const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
 
+  const rootRef = useRef<HTMLDivElement>(null!);
+
   const handlePanelClick = useCallback((panelData: any) => {
     setSelectedPanel(panelData);
     setIsModalOpen(true);
@@ -475,28 +480,63 @@ const SolarPanelLayout: React.FC = () => {
     ];
   }, [parcela, agrupaciones]);
 
+  useEffect(() => {
+    const resizeHandler = () => {};
+    window.addEventListener("resize", resizeHandler);
+    return () => window.removeEventListener("resize", resizeHandler);
+  }, []);
+
+  const sceneContent = useMemo(
+    () => (
+      <>
+        <PerspectiveCamera
+          makeDefault
+          fov={75}
+          near={0.1}
+          far={10000}
+          position={cameraPosition}
+        />
+        <SolarPlantScene
+          selectedGroup={selectedGroup}
+          selectedPanels={selectedPanels}
+          onPanelClick={handlePanelClick}
+          onCameraUpdate={handleCameraUpdate}
+        />
+      </>
+    ),
+    [
+      cameraPosition,
+      selectedGroup,
+      selectedPanels,
+      handlePanelClick,
+      handleCameraUpdate,
+    ],
+  );
+
+  const sceneConfig = useMemo(
+    () => ({
+      content: sceneContent,
+      cameraType: "perspective" as const,
+      cameraSettings: {
+        position: cameraPosition,
+        makeDefault: true,
+      },
+    }),
+    [sceneContent, cameraPosition],
+  );
+
+  useRegisterScene("solar-plant-main", sceneConfig);
+
   return (
     <>
-      <div className="w-full h-screen overflow-hidden">
-        <Canvas
-          camera={{
-            fov: 75,
-            near: 0.1,
-            far: 10000,
-            position: cameraPosition,
-          }}
-          gl={{
-            antialias: true,
-            alpha: true,
-          }}
-        >
-          <SolarPlantScene
-            selectedGroup={selectedGroup}
-            selectedPanels={selectedPanels}
-            onPanelClick={handlePanelClick}
-            onCameraUpdate={handleCameraUpdate}
-          />
-        </Canvas>
+      <div
+        ref={rootRef}
+        className={`h-screen overflow-hidden relative transition-all duration-300 ${
+          showGroupDetail ? "w-1/2" : "w-full"
+        }`}
+        style={{ pointerEvents: "auto" }}
+      >
+        {/* El contenido 3D ahora se renderiza en el Canvas global */}
       </div>
 
       <div className="absolute top-32 left-5 border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-black z-10">

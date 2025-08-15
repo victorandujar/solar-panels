@@ -1,6 +1,10 @@
+"use client";
+
+// src/components/GroupDetail3D.tsx
 import React, { useMemo, useRef, useState, createElement } from "react";
-import { Canvas, ThreeEvent } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
+import { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 
 interface PanelData {
@@ -246,7 +250,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
   };
 
   return (
-    <div className="fixed top-32 right-4 w-[600px] md:h-[78vh] 2xl:w-[85vh] h-[85vh] flex flex-col justify-between bg-white/10 backdrop-blur-lg rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-[9999] overflow-y-auto">
+    <div className="fixed top-0 right-0 w-1/2 h-full flex flex-col bg-white/10 backdrop-blur-lg shadow-2xl border-l border-gray-200 overflow-hidden z-10">
       <div className="bg-black text-white p-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Grupo {groupData.groupId}</h2>
@@ -274,14 +278,12 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
         </p>
       </div>
 
-      <div className="p-4">
-        <div className="w-full h-[400px] rounded-lg bg-gray-50 overflow-hidden">
+      <div className="flex-1 relative">
+        {/* Canvas independiente para el detalle del grupo */}
+        <div className="absolute inset-0">
           <Canvas
-            gl={{
-              antialias: true,
-              alpha: true,
-            }}
-            style={{ background: "transparent" }}
+            style={{ width: "100%", height: "100%" }}
+            camera={{ position: [0, 0, 30], near: 0.1, far: 1000 }}
           >
             <GroupScene
               groupData={groupData}
@@ -291,46 +293,53 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
           </Canvas>
         </div>
 
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg text-black">
-          <h3 className="text-sm font-semibold mb-2 text-gray-800">
-            Selección por Rango
-          </h3>
-          <div className="flex space-x-2 mb-2">
-            <input
-              type="number"
-              placeholder="ID Inicio"
-              value={rangeStart}
-              onChange={(e) => setRangeStart(e.target.value)}
-              className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <input
-              type="number"
-              placeholder="ID Fin"
-              value={rangeEnd}
-              onChange={(e) => setRangeEnd(e.target.value)}
-              className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+        {/* Overlay con información adicional */}
+        <div
+          className="absolute bottom-4 left-4 right-4"
+          style={{ zIndex: 10 }}
+        >
+          <div className="p-3 bg-gray-50/90 rounded-lg text-black backdrop-blur-sm">
+            <h3 className="text-sm font-semibold mb-2 text-gray-800">
+              Selección por Rango
+            </h3>
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="number"
+                placeholder="ID Inicio"
+                value={rangeStart}
+                onChange={(e) => setRangeStart(e.target.value)}
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                placeholder="ID Fin"
+                value={rangeEnd}
+                onChange={(e) => setRangeEnd(e.target.value)}
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex space-x-2 mb-2">
+              <button
+                onClick={handleRangeSelect}
+                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Seleccionar Rango
+              </button>
+              <button
+                onClick={clearSelection}
+                className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              >
+                Limpiar Selección
+              </button>
+            </div>
+            <div className="text-xs text-gray-700">
+              <p>
+                • Haz clic en las placas para seleccionarlas individualmente
+              </p>
+              <p>• Usa los inputs para seleccionar un rango de placas</p>
+              <p>• Placas seleccionadas: {selectedPanels.size}</p>
+            </div>
           </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={handleRangeSelect}
-              className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              Seleccionar Rango
-            </button>
-            <button
-              onClick={clearSelection}
-              className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-            >
-              Limpiar Selección
-            </button>
-          </div>
-        </div>
-
-        <div className="text-xs text-black font-bold">
-          <p>• Haz clic en las placas para seleccionarlas individualmente</p>
-          <p>• Usa los inputs para seleccionar un rango de placas</p>
-          <p>• Placas seleccionadas: {selectedPanels.size}</p>
         </div>
       </div>
     </div>
