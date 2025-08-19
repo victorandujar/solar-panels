@@ -12,7 +12,7 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
 
   return (
     <div
-      className={`bg-black/80 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-white ${className}`}
+      className={`border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-black ${className}`}
     >
       <h3 className="text-sm font-semibold mb-3 flex items-center">
         <svg
@@ -33,13 +33,13 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
 
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span className="text-xs text-gray-300">Total Paneles:</span>
+          <span className="text-xs text-gray-600">Total Paneles:</span>
           <span className="text-xs font-bold">{stats.totalPanels}</span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-xs text-green-400">Paneles Activos:</span>
-          <span className="text-xs font-bold text-green-400">
+          <span className="text-xs text-green-700">Paneles Activos:</span>
+          <span className="text-xs font-bold text-green-700">
             {stats.activePanels}
           </span>
         </div>
@@ -52,7 +52,7 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
         </div>
 
         <div className="flex justify-between">
-          <span className="text-xs text-gray-300">Eficiencia:</span>
+          <span className="text-xs text-gray-600">Eficiencia:</span>
           <span className="text-xs font-bold">
             {stats.panelActivePercentage.toFixed(1)}%
           </span>
@@ -60,7 +60,7 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
 
         <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
           <div
-            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+            className="bg-green-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${stats.panelActivePercentage}%` }}
           ></div>
         </div>
