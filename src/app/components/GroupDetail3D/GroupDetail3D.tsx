@@ -5,6 +5,11 @@ import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
+import {
+  useSolarPanelStore,
+  usePanelActive,
+  type SolarPanelState,
+} from "../../../store/useStore";
 
 interface PanelData {
   panelId: string;
@@ -40,6 +45,8 @@ const GroupPanel: React.FC<GroupPanelProps> = ({
   localPosition,
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+
+  const isActive = usePanelActive(panelData.panelId);
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -89,10 +96,10 @@ const GroupPanel: React.FC<GroupPanelProps> = ({
         },
         createElement("planeGeometry" as any, { args: [1, 1] }),
         createElement("meshStandardMaterial" as any, {
-          color: isSelected ? 0xffff00 : 0x4682b4,
+          color: !isActive ? 0xcccccc : isSelected ? 0xffff00 : 0x4682b4,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: isSelected ? 1 : 0.9,
+          opacity: !isActive ? 0.5 : isSelected ? 1 : 0.9,
         }),
       )}
 
@@ -222,6 +229,21 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
 
+  // Zustand store actions
+  const disablePanels = useSolarPanelStore(
+    (state: SolarPanelState) => state.disablePanels,
+  );
+  const enablePanels = useSolarPanelStore(
+    (state: SolarPanelState) => state.enablePanels,
+  );
+  const disableGroup = useSolarPanelStore(
+    (state: SolarPanelState) => state.disableGroup,
+  );
+  const enableGroup = useSolarPanelStore(
+    (state: SolarPanelState) => state.enableGroup,
+  );
+  const panels = useSolarPanelStore((state: SolarPanelState) => state.panels);
+
   const handleRangeSelect = () => {
     if (!rangeStart || !rangeEnd) return;
 
@@ -249,6 +271,62 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
     setRangeEnd("");
     setRangeStart("");
   };
+
+  const handleDisableSelected = () => {
+    if (selectedPanels.size === 0) {
+      alert("Por favor, selecciona al menos un panel para deshabilitar");
+      return;
+    }
+
+    const panelIds = Array.from(selectedPanels);
+    disablePanels(panelIds);
+    clearSelection();
+  };
+
+  const handleEnableSelected = () => {
+    if (selectedPanels.size === 0) {
+      alert("Por favor, selecciona al menos un panel para habilitar");
+      return;
+    }
+
+    const panelIds = Array.from(selectedPanels);
+    enablePanels(panelIds);
+    clearSelection();
+  };
+
+  const handleDisableGroup = () => {
+    const confirmDisable = window.confirm(
+      `¿Estás seguro que quieres deshabilitar todo el grupo ${groupData.groupId}?`,
+    );
+
+    if (confirmDisable) {
+      disableGroup(groupData.groupId);
+      clearSelection();
+    }
+  };
+
+  const handleEnableGroup = () => {
+    const confirmEnable = window.confirm(
+      `¿Estás seguro que quieres habilitar todo el grupo ${groupData.groupId}?`,
+    );
+
+    if (confirmEnable) {
+      enableGroup(groupData.groupId);
+      clearSelection();
+    }
+  };
+
+  // Verificar si hay paneles inactivos en la selección y en el grupo
+  const hasInactiveSelectedPanels = Array.from(selectedPanels).some(
+    (panelId) => {
+      const panel = panels.find((p) => p.id === panelId);
+      return panel && !panel.active;
+    },
+  );
+
+  const hasInactivePanelsInGroup = panels.some(
+    (panel) => panel.groupId === groupData.groupId && !panel.active,
+  );
 
   return (
     <div className="fixed top-0 right-0 w-1/2 h-full flex flex-col bg-white/10 backdrop-blur-lg shadow-2xl border-l border-gray-200 overflow-hidden z-10">
@@ -301,6 +379,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
             <h3 className="text-sm font-semibold mb-2 text-gray-800">
               Selección por Rango
             </h3>
+
             <div className="flex space-x-2 mb-2">
               <input
                 type="number"
@@ -331,12 +410,53 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
                 Limpiar Selección
               </button>
             </div>
+            <section className="flex space-x-2 mb-1">
+              <button
+                onClick={handleDisableSelected}
+                disabled={selectedPanels.size === 0}
+                className="px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Deshabilitar Seleccionados
+              </button>
+              <button
+                onClick={handleEnableSelected}
+                disabled={
+                  selectedPanels.size === 0 || !hasInactiveSelectedPanels
+                }
+                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Habilitar Seleccionados
+              </button>
+
+              <button
+                onClick={handleDisableGroup}
+                className="px-3 py-1 text-xs bg-red-800 text-white rounded hover:bg-red-900 transition-colors"
+              >
+                Deshabilitar Grupo
+              </button>
+              <button
+                onClick={handleEnableGroup}
+                disabled={!hasInactivePanelsInGroup}
+                className="px-3 py-1 text-xs bg-green-800 text-white rounded hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Habilitar Grupo
+              </button>
+            </section>
+
             <div className="text-xs text-gray-700">
               <p>
                 • Haz clic en las placas para seleccionarlas individualmente
               </p>
               <p>• Usa los inputs para seleccionar un rango de placas</p>
               <p>• Placas seleccionadas: {selectedPanels.size}</p>
+              <p>
+                • Paneles inactivos en el grupo:{" "}
+                {
+                  panels.filter(
+                    (p) => p.groupId === groupData.groupId && !p.active,
+                  ).length
+                }
+              </p>
             </div>
           </div>
         </div>

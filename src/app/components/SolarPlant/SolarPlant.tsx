@@ -16,7 +16,14 @@ import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
 import GroupDetail3D from "../GroupDetail3D/GroupDetail3D";
 import GroupSelector from "../GroupSelector/GroupSelector";
+import PanelStats from "../PanelStats/PanelStats";
+import QuickControls from "../QuickControls/QuickControls";
 import { useRegisterScene } from "../../hooks/useRegisterScene";
+import {
+  useSolarPanelStore,
+  useAllPanelStates,
+  type SolarPanelState,
+} from "../../../store/useStore";
 
 interface Point {
   X: number;
@@ -47,6 +54,7 @@ interface SolarPanelProps {
   isSelected: boolean;
   isGroupSelected: boolean;
   isHighlighted: boolean;
+  isActive: boolean;
   onClick: (panelData: any) => void;
 }
 
@@ -61,6 +69,7 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
   isSelected,
   isGroupSelected,
   isHighlighted,
+  isActive,
   onClick,
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -71,7 +80,12 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
     let transparent = false;
     let finalColor = new THREE.Color(color);
 
-    if (isHighlighted) {
+    if (!isActive) {
+      finalColor = new THREE.Color(0xcccccc);
+      emissiveIntensity = 0.1;
+      opacity = 0.6;
+      transparent = true;
+    } else if (isHighlighted) {
       emissiveIntensity = 3.0;
       opacity = 1;
       transparent = true;
@@ -96,7 +110,7 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
       opacity,
       transparent,
     };
-  }, [color, isSelected, isGroupSelected, isHighlighted]);
+  }, [color, isSelected, isGroupSelected, isHighlighted, isActive]);
 
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
@@ -295,6 +309,8 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   const { agrupaciones, longitud, ancho, parcela, tilt } =
     solarData as SolarData;
 
+  const panelStates = useAllPanelStates();
+
   const { centroid, legendData, panels, maxDistance } = useMemo(() => {
     const colorPalette = [
       0x4682b4, 0x32cd32, 0xffa500, 0x8a2be2, 0xff69b4, 0x20b2aa, 0xff6347,
@@ -389,6 +405,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
           isSelected={!!selectedGroup && selectedGroup !== panel.groupId}
           isGroupSelected={selectedGroup === panel.groupId}
           isHighlighted={selectedPanels.has(panel.panelId)}
+          isActive={panelStates[panel.panelId] ?? true}
           onClick={onPanelClick}
         />
       ))}
@@ -409,7 +426,15 @@ const SolarPanelLayout: React.FC = () => {
   const [showGroupDetail, setShowGroupDetail] = useState(false);
   const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
 
+  const initializePanels = useSolarPanelStore(
+    (state: SolarPanelState) => state.initializePanels,
+  );
+
   const rootRef = useRef<HTMLDivElement>(null!);
+
+  useEffect(() => {
+    initializePanels();
+  }, [initializePanels]);
 
   const handlePanelClick = useCallback((panelData: any) => {
     setSelectedPanel(panelData);
@@ -550,6 +575,10 @@ const SolarPanelLayout: React.FC = () => {
         selectedGroup={selectedGroup}
         onGroupChange={handleGroupChange}
       />
+
+      <PanelStats className="fixed top-[30%] left-[21%] z-20 min-w-[200px]" />
+
+      <QuickControls className="fixed top-[14.5%] left-[21%] z-20 min-w-[200px]" />
 
       <Modal
         isOpen={isModalOpen}
