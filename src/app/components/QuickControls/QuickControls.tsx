@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import {
-  useSolarPanelStore,
-  usePanelStats,
-  type SolarPanelState,
-} from "../../../store/useStore";
+import { useSolarPanelStore, usePanelStats } from "../../../store/useStore";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
+import NotificationDialog from "../NotificationDialog/NotificationDialog";
+import { useDialog } from "../../hooks/useDialog";
 
 interface QuickControlsProps {
   className?: string;
@@ -18,19 +17,50 @@ const QuickControls: React.FC<QuickControlsProps> = ({ className = "" }) => {
     (state) => state.disableAllPanels,
   );
 
+  const {
+    confirmDialog,
+    showConfirm,
+    hideConfirm,
+    notificationDialog,
+    showNotification,
+    hideNotification,
+  } = useDialog();
+
   const handleEnableAll = React.useCallback(() => {
     enableAllPanels();
-  }, [enableAllPanels]);
+    showNotification({
+      message: `${stats.inactivePanels} panel${stats.inactivePanels > 1 ? "es" : ""} habilitado${stats.inactivePanels > 1 ? "s" : ""}`,
+      variant: "success",
+      title: "Paneles habilitados",
+      autoClose: true,
+    });
+  }, [enableAllPanels, stats.inactivePanels, showNotification]);
 
-  const handleDisableAll = React.useCallback(() => {
-    const confirmDisable = window.confirm(
-      `¿Estás seguro que quieres deshabilitar TODOS los paneles de la planta? (${stats.totalPanels} paneles)`,
-    );
+  const handleDisableAll = React.useCallback(async () => {
+    const confirmed = await showConfirm({
+      message: `¿Estás seguro que quieres deshabilitar TODOS los paneles de la planta? (${stats.totalPanels} paneles)`,
+      title: "Confirmar deshabilitación masiva",
+      variant: "danger",
+      confirmText: "Deshabilitar todos",
+      cancelText: "Cancelar",
+    });
 
-    if (confirmDisable) {
+    if (confirmed) {
       disableAllPanels();
+      showNotification({
+        message: `${stats.activePanels} panel${stats.activePanels > 1 ? "es" : ""} deshabilitado${stats.activePanels > 1 ? "s" : ""}`,
+        variant: "success",
+        title: "Paneles deshabilitados",
+        autoClose: true,
+      });
     }
-  }, [disableAllPanels, stats.totalPanels]);
+  }, [
+    disableAllPanels,
+    stats.totalPanels,
+    stats.activePanels,
+    showConfirm,
+    showNotification,
+  ]);
 
   return (
     <div
@@ -70,6 +100,10 @@ const QuickControls: React.FC<QuickControlsProps> = ({ className = "" }) => {
           Deshabilitar Todos ({stats.activePanels} activos)
         </button>
       </div>
+
+      <ConfirmDialog {...confirmDialog} onClose={hideConfirm} />
+
+      <NotificationDialog {...notificationDialog} onClose={hideNotification} />
     </div>
   );
 };

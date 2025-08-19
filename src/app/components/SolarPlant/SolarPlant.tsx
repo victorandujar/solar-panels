@@ -15,6 +15,7 @@ import solarData from "../../../utils/ObjEyeshot.json";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
 import GroupDetail3D from "../GroupDetail3D/GroupDetail3D";
+import GroupManagement from "../GroupManagement/GroupManagement";
 import GroupSelector from "../GroupSelector/GroupSelector";
 import PanelStats from "../PanelStats/PanelStats";
 import QuickControls from "../QuickControls/QuickControls";
@@ -310,9 +311,10 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
     solarData as SolarData;
 
   const panelStates = useAllPanelStates();
+  const groups = useSolarPanelStore((state: SolarPanelState) => state.groups);
 
   const { centroid, legendData, panels, maxDistance } = useMemo(() => {
-    const colorPalette = [
+    const defaultColorPalette = [
       0x4682b4, 0x32cd32, 0xffa500, 0x8a2be2, 0xff69b4, 0x20b2aa, 0xff6347,
       0x1e90ff, 0x228b22, 0xffd700,
     ];
@@ -338,29 +340,43 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
     );
 
     const agrupacionKeys = Object.keys(agrupaciones);
-    const legendItems = agrupacionKeys.map((key, idx) => {
-      const color = colorPalette[idx % colorPalette.length];
+
+    const legendItems = groups.map((group) => {
+      let color: number;
+
+      if (group.color) {
+        color = parseInt(group.color.replace("#", ""), 16);
+      } else {
+        const idx = groups.indexOf(group);
+        color = defaultColorPalette[idx % defaultColorPalette.length];
+      }
+
       const colorHex = "#" + color.toString(16).padStart(6, "0");
-      const count = agrupaciones[key].length;
-      return { key, color: colorHex, count };
+      return { key: group.id, color: colorHex, count: group.panels.length };
     });
 
     const tiltRad = (tilt * Math.PI) / 180;
     const panelsList: any[] = [];
 
-    agrupacionKeys.forEach((key, idx) => {
-      const color = colorPalette[idx % colorPalette.length];
-      const points = agrupaciones[key];
+    groups.forEach((group) => {
+      let color: number;
 
-      points.forEach((point, panelIdx) => {
+      if (group.color) {
+        color = parseInt(group.color.replace("#", ""), 16);
+      } else {
+        const idx = groups.indexOf(group);
+        color = defaultColorPalette[idx % defaultColorPalette.length];
+      }
+
+      group.panels.forEach((panel) => {
         panelsList.push({
-          groupId: key,
-          panelId: `${key}-${panelIdx}`,
-          position: [point.X, point.Y, point.Z + ancho / 2] as [
-            number,
-            number,
-            number,
-          ],
+          groupId: panel.groupId,
+          panelId: panel.id,
+          position: [
+            panel.position.X,
+            panel.position.Y,
+            panel.position.Z + ancho / 2,
+          ] as [number, number, number],
           rotation: [tiltRad, 0, 0] as [number, number, number],
           color,
           dimensions: { length: longitud, width: ancho },
@@ -375,7 +391,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       panels: panelsList,
       maxDistance,
     };
-  }, [agrupaciones, longitud, ancho, parcela, tilt]);
+  }, [agrupaciones, longitud, ancho, parcela, tilt, groups]);
 
   React.useEffect(() => {
     onCameraUpdate(legendData);
@@ -425,10 +441,28 @@ const SolarPanelLayout: React.FC = () => {
   const [selectedPanels, setSelectedPanels] = useState<Set<string>>(new Set());
   const [showGroupDetail, setShowGroupDetail] = useState(false);
   const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
+  const [showGroupManagement, setShowGroupManagement] = useState(false);
+
+  const stateRef = useRef({
+    isModalOpen,
+    showGroupDetail,
+    selectedGroupData,
+    showGroupManagement,
+  });
+
+  useEffect(() => {
+    stateRef.current = {
+      isModalOpen,
+      showGroupDetail,
+      selectedGroupData,
+      showGroupManagement,
+    };
+  }, [isModalOpen, showGroupDetail, selectedGroupData, showGroupManagement]);
 
   const initializePanels = useSolarPanelStore(
     (state: SolarPanelState) => state.initializePanels,
   );
+  const groups = useSolarPanelStore((state: SolarPanelState) => state.groups);
 
   const rootRef = useRef<HTMLDivElement>(null!);
 
@@ -436,7 +470,28 @@ const SolarPanelLayout: React.FC = () => {
     initializePanels();
   }, [initializePanels]);
 
+  useEffect(() => {
+    if (selectedGroup && !groups.find((g: any) => g.id === selectedGroup)) {
+      setSelectedGroup("");
+      setShowGroupDetail(false);
+      setShowGroupManagement(false);
+      setSelectedGroupData(null);
+      setSelectedPanels(new Set());
+    }
+  }, [selectedGroup, groups]);
+
   const handlePanelClick = useCallback((panelData: any) => {
+    const currentStates = stateRef.current;
+
+    if (
+      currentStates.isModalOpen ||
+      currentStates.showGroupDetail ||
+      currentStates.selectedGroupData ||
+      currentStates.showGroupManagement
+    ) {
+      return;
+    }
+
     setSelectedPanel(panelData);
     setIsModalOpen(true);
     setShowGroupDetail(false);
@@ -450,36 +505,151 @@ const SolarPanelLayout: React.FC = () => {
     [],
   );
 
-  const handleGroupChange = useCallback((groupId: string) => {
-    setSelectedGroup(groupId);
-    setIsModalOpen(false);
-    setSelectedPanel(null);
+  const handleGroupChange = useCallback(
+    (groupId: string) => {
+      setSelectedGroup(groupId);
+      setIsModalOpen(false);
+      setSelectedPanel(null);
 
-    if (groupId) {
-      const { agrupaciones } = solarData as SolarData;
-      const groupPanels =
-        agrupaciones[groupId]?.map((point, panelIdx) => ({
-          groupId: groupId,
-          panelId: `${groupId}-${panelIdx}`,
-          position: { x: point.X, y: point.Y, z: point.Z },
+      if (groupId) {
+        const selectedGroup = groups.find((g: any) => g.id === groupId);
+
+        if (selectedGroup) {
+          const groupPanels = selectedGroup.panels.map((panel: any) => ({
+            groupId: panel.groupId,
+            panelId: panel.id,
+            position: {
+              x: panel.position.X,
+              y: panel.position.Y,
+              z: panel.position.Z,
+            },
+            inclination: (solarData as SolarData).tilt,
+            dimensions: {
+              length: (solarData as SolarData).longitud,
+              width: (solarData as SolarData).ancho,
+            },
+          }));
+
+          setSelectedGroupData({
+            groupId: groupId,
+            allPanelsInGroup: groupPanels,
+          });
+          setShowGroupDetail(true);
+        }
+      } else {
+        setShowGroupDetail(false);
+        setSelectedGroupData(null);
+      }
+    },
+    [groups],
+  );
+
+  const handleOpenGroupManagement = useCallback(() => {
+    setShowGroupManagement(true);
+    setShowGroupDetail(false);
+  }, []);
+
+  const handleCloseGroupManagement = useCallback(() => {
+    setShowGroupManagement(false);
+    setShowGroupDetail(true);
+
+    if (selectedGroup) {
+      const updatedGroup = groups.find((g: any) => g.id === selectedGroup);
+      if (updatedGroup && updatedGroup.panels.length > 0) {
+        const groupPanels = updatedGroup.panels.map((panel: any) => ({
+          groupId: panel.groupId,
+          panelId: panel.id,
+          position: {
+            x: panel.position.X,
+            y: panel.position.Y,
+            z: panel.position.Z,
+          },
           inclination: (solarData as SolarData).tilt,
           dimensions: {
             length: (solarData as SolarData).longitud,
             width: (solarData as SolarData).ancho,
           },
-        })) || [];
+        }));
 
-      setSelectedGroupData({
-        groupId: groupId,
-        allPanelsInGroup: groupPanels,
-      });
-      setShowGroupDetail(true);
-    } else {
-      setShowGroupDetail(false);
-      setSelectedGroupData(null);
+        setSelectedGroupData({
+          groupId: selectedGroup,
+          allPanelsInGroup: groupPanels,
+        });
+      } else {
+        setShowGroupDetail(false);
+        setSelectedGroupData(null);
+        setSelectedGroup("");
+      }
     }
-  }, []);
+  }, [selectedGroup, groups]);
 
+  const handleGroupChanged = useCallback(() => {
+    if (selectedGroup) {
+      const updatedGroup = groups.find((g: any) => g.id === selectedGroup);
+      if (updatedGroup && updatedGroup.panels.length > 0) {
+        const groupPanels = updatedGroup.panels.map((panel: any) => ({
+          groupId: panel.groupId,
+          panelId: panel.id,
+          position: {
+            x: panel.position.X,
+            y: panel.position.Y,
+            z: panel.position.Z,
+          },
+          inclination: (solarData as SolarData).tilt,
+          dimensions: {
+            length: (solarData as SolarData).longitud,
+            width: (solarData as SolarData).ancho,
+          },
+        }));
+
+        setSelectedGroupData({
+          groupId: selectedGroup,
+          allPanelsInGroup: groupPanels,
+        });
+      } else {
+        setShowGroupDetail(false);
+        setShowGroupManagement(false);
+        setSelectedGroupData(null);
+        setSelectedGroup("");
+      }
+    }
+  }, [selectedGroup, groups]);
+
+  const handleOpenGroupManagementFromPanel = useCallback(
+    (groupId: string) => {
+      setIsModalOpen(false);
+      setSelectedPanel(null);
+
+      const selectedGroup = groups.find((g: any) => g.id === groupId);
+
+      if (selectedGroup) {
+        const groupPanels = selectedGroup.panels.map((panel: any) => ({
+          groupId: panel.groupId,
+          panelId: panel.id,
+          position: {
+            x: panel.position.X,
+            y: panel.position.Y,
+            z: panel.position.Z,
+          },
+          inclination: (solarData as SolarData).tilt,
+          dimensions: {
+            length: (solarData as SolarData).longitud,
+            width: (solarData as SolarData).ancho,
+          },
+        }));
+
+        setSelectedGroupData({
+          groupId: groupId,
+          allPanelsInGroup: groupPanels,
+        });
+
+        setShowGroupDetail(false);
+        setShowGroupManagement(true);
+        setSelectedGroup(groupId);
+      }
+    },
+    [groups],
+  );
   const { agrupaciones, parcela } = solarData as SolarData;
 
   const cameraPosition = useMemo(() => {
@@ -567,7 +737,6 @@ const SolarPanelLayout: React.FC = () => {
         className={`h-screen overflow-hidden relative transition-all duration-300 font-mono ${
           showGroupDetail ? "w-1/2" : "w-full"
         }`}
-        style={{ pointerEvents: "auto" }}
       ></div>
 
       <GroupSelector
@@ -585,10 +754,15 @@ const SolarPanelLayout: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         title="Detalle de Placa Solar"
       >
-        {selectedPanel && <SolarPanelDetail panelData={selectedPanel} />}
+        {selectedPanel && (
+          <SolarPanelDetail
+            panelData={selectedPanel}
+            onOpenGroupManagement={handleOpenGroupManagementFromPanel}
+          />
+        )}
       </Modal>
 
-      {showGroupDetail && selectedGroupData && (
+      {showGroupDetail && selectedGroupData && !showGroupManagement && (
         <GroupDetail3D
           groupData={selectedGroupData}
           selectedPanels={selectedPanels}
@@ -601,6 +775,19 @@ const SolarPanelLayout: React.FC = () => {
           onPanelSelect={(panelIds: Set<string>) => {
             setSelectedPanels(panelIds);
           }}
+          onOpenManagement={handleOpenGroupManagement}
+        />
+      )}
+
+      {showGroupManagement && selectedGroupData && (
+        <GroupManagement
+          groupData={selectedGroupData}
+          selectedPanels={selectedPanels}
+          onClose={handleCloseGroupManagement}
+          onPanelSelect={(panelIds: Set<string>) => {
+            setSelectedPanels(panelIds);
+          }}
+          onGroupChanged={handleGroupChanged}
         />
       )}
     </>

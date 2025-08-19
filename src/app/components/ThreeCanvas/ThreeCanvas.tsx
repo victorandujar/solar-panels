@@ -18,6 +18,8 @@ const ThreeCanvas: React.FC = () => {
         height: "100vh",
         pointerEvents: "auto",
         zIndex: 0,
+        opacity: 1,
+        transition: "opacity 0.2s ease-in-out",
       }}
       eventSource={typeof window !== "undefined" ? document.body : undefined}
       eventPrefix="client"

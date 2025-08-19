@@ -18,6 +18,7 @@ interface SolarPanelDetailProps {
     panelId: string;
     dimensions: { length: number; width: number };
   };
+  onOpenGroupManagement?: (groupId: string) => void;
 }
 
 interface SolarCellProps {
@@ -323,8 +324,10 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
   );
 };
 
-const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
-  // Zustand store para manejar el estado del panel
+const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({
+  panelData,
+  onOpenGroupManagement,
+}) => {
   const togglePanel = useSolarPanelStore(
     (state: SolarPanelState) => state.togglePanel,
   );
@@ -337,7 +340,6 @@ const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
   return (
     <div className="space-y-4">
       <div className="bg-transparent rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
-        {/* Control de Estado del Panel */}
         <div className="mb-4 flex justify-between items-center">
           <h3 className="text-lg font-bold text-white">
             Panel {panelData.panelId}
@@ -428,6 +430,20 @@ const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
                   </span>
                 </div>
               </div>
+
+              {onOpenGroupManagement && (
+                <div className="mt-4 pt-3 border-t border-gray-500/40">
+                  <button
+                    onClick={() => onOpenGroupManagement(panelData.groupId)}
+                    className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    🔧 Gestionar Grupo {panelData.groupId}
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1 text-center">
+                    Reorganiza paneles, crea nuevos grupos y más
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-500/40">

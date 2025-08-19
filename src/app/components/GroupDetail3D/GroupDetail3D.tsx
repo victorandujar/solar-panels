@@ -10,6 +10,9 @@ import {
   usePanelActive,
   type SolarPanelState,
 } from "../../../store/useStore";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
+import NotificationDialog from "../NotificationDialog/NotificationDialog";
+import { useDialog } from "../../hooks/useDialog";
 
 interface PanelData {
   panelId: string;
@@ -27,6 +30,7 @@ interface GroupDetail3DProps {
   selectedPanels: Set<string>;
   onPanelSelect: (panelIds: Set<string>) => void;
   onClose: () => void;
+  onOpenManagement?: () => void;
 }
 
 interface GroupPanelProps {
@@ -225,9 +229,19 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
   selectedPanels,
   onPanelSelect,
   onClose,
+  onOpenManagement,
 }) => {
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
+
+  const {
+    confirmDialog,
+    showConfirm,
+    hideConfirm,
+    notificationDialog,
+    showNotification,
+    hideNotification,
+  } = useDialog();
 
   const disablePanels = useSolarPanelStore(
     (state: SolarPanelState) => state.disablePanels,
@@ -271,47 +285,102 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
     setRangeStart("");
   };
 
-  const handleDisableSelected = () => {
+  const handleDisableSelected = async () => {
     if (selectedPanels.size === 0) {
-      alert("Por favor, selecciona al menos un panel para deshabilitar");
+      showNotification({
+        message: "Por favor, selecciona al menos un panel para deshabilitar",
+        variant: "warning",
+        title: "Paneles requeridos",
+      });
       return;
     }
 
     const panelIds = Array.from(selectedPanels);
-    disablePanels(panelIds);
-    clearSelection();
+
+    const confirmed = await showConfirm({
+      message: `¿Estás seguro que quieres deshabilitar ${panelIds.length} panel${panelIds.length > 1 ? "es" : ""} seleccionado${panelIds.length > 1 ? "s" : ""}?`,
+      title: "Confirmar deshabilitación",
+      variant: "warning",
+      confirmText: "Deshabilitar",
+      cancelText: "Cancelar",
+    });
+
+    if (confirmed) {
+      disablePanels(panelIds);
+      clearSelection();
+
+      showNotification({
+        message: `${panelIds.length} panel${panelIds.length > 1 ? "es" : ""} deshabilitado${panelIds.length > 1 ? "s" : ""}`,
+        variant: "success",
+        title: "Paneles deshabilitados",
+        autoClose: true,
+      });
+    }
   };
 
-  const handleEnableSelected = () => {
+  const handleEnableSelected = async () => {
     if (selectedPanels.size === 0) {
-      alert("Por favor, selecciona al menos un panel para habilitar");
+      showNotification({
+        message: "Por favor, selecciona al menos un panel para habilitar",
+        variant: "warning",
+        title: "Paneles requeridos",
+      });
       return;
     }
 
     const panelIds = Array.from(selectedPanels);
     enablePanels(panelIds);
     clearSelection();
+
+    showNotification({
+      message: `${panelIds.length} panel${panelIds.length > 1 ? "es" : ""} habilitado${panelIds.length > 1 ? "s" : ""}`,
+      variant: "success",
+      title: "Paneles habilitados",
+      autoClose: true,
+    });
   };
 
-  const handleDisableGroup = () => {
-    const confirmDisable = window.confirm(
-      `¿Estás seguro que quieres deshabilitar todo el grupo ${groupData.groupId}?`,
-    );
+  const handleDisableGroup = async () => {
+    const confirmed = await showConfirm({
+      message: `¿Estás seguro que quieres deshabilitar todo el grupo ${groupData.groupId}?`,
+      title: "Confirmar deshabilitación del grupo",
+      variant: "danger",
+      confirmText: "Deshabilitar grupo",
+      cancelText: "Cancelar",
+    });
 
-    if (confirmDisable) {
+    if (confirmed) {
       disableGroup(groupData.groupId);
       clearSelection();
+
+      showNotification({
+        message: `Grupo ${groupData.groupId} deshabilitado completamente`,
+        variant: "success",
+        title: "Grupo deshabilitado",
+        autoClose: true,
+      });
     }
   };
 
-  const handleEnableGroup = () => {
-    const confirmEnable = window.confirm(
-      `¿Estás seguro que quieres habilitar todo el grupo ${groupData.groupId}?`,
-    );
+  const handleEnableGroup = async () => {
+    const confirmed = await showConfirm({
+      message: `¿Estás seguro que quieres habilitar todo el grupo ${groupData.groupId}?`,
+      title: "Confirmar habilitación del grupo",
+      variant: "success",
+      confirmText: "Habilitar grupo",
+      cancelText: "Cancelar",
+    });
 
-    if (confirmEnable) {
+    if (confirmed) {
       enableGroup(groupData.groupId);
       clearSelection();
+
+      showNotification({
+        message: `Grupo ${groupData.groupId} habilitado completamente`,
+        variant: "success",
+        title: "Grupo habilitado",
+        autoClose: true,
+      });
     }
   };
 
@@ -408,6 +477,17 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
                 Limpiar Selección
               </button>
             </div>
+            {onOpenManagement && (
+              <div className="flex space-x-2 mb-2">
+                <button
+                  onClick={onOpenManagement}
+                  className="px-3 py-1 text-s bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                  title="Abrir gestor de grupos para reorganizar paneles"
+                >
+                  🔧 Gestionar Grupo
+                </button>
+              </div>
+            )}
             <section className="flex space-x-2 mb-1">
               <button
                 onClick={handleDisableSelected}
@@ -459,6 +539,10 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
           </div>
         </div>
       </div>
+
+      <ConfirmDialog {...confirmDialog} onClose={hideConfirm} />
+
+      <NotificationDialog {...notificationDialog} onClose={hideNotification} />
     </div>
   );
 };
