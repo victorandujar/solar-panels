@@ -229,7 +229,6 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
 
-  // Zustand store actions
   const disablePanels = useSolarPanelStore(
     (state: SolarPanelState) => state.disablePanels,
   );
@@ -316,7 +315,6 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
     }
   };
 
-  // Verificar si hay paneles inactivos en la selección y en el grupo
   const hasInactiveSelectedPanels = Array.from(selectedPanels).some(
     (panelId) => {
       const panel = panels.find((p) => p.id === panelId);
@@ -329,7 +327,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
   );
 
   return (
-    <div className="fixed top-0 right-0 w-1/2 h-full flex flex-col bg-white/10 backdrop-blur-lg shadow-2xl border-l border-gray-200 overflow-hidden z-10">
+    <div className="fixed top-0 right-0 w-1/2 h-full flex flex-col bg-white/10 backdrop-blur-lg shadow-2xl border-l border-gray-200 overflow-hidden z-50">
       <div className="bg-black text-white p-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Grupo {groupData.groupId}</h2>
@@ -372,11 +370,11 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
         </div>
 
         <div
-          className="absolute bottom-4 left-4 right-4"
+          className="absolute bottom-4 left-4 right-4 2xl:text-sm md:text-xs"
           style={{ zIndex: 10 }}
         >
           <div className="p-3 bg-gray-50/90 rounded-lg text-black backdrop-blur-sm">
-            <h3 className="text-sm font-semibold mb-2 text-gray-800">
+            <h3 className="font-semibold mb-2 text-gray-800">
               Selección por Rango
             </h3>
 
@@ -399,13 +397,13 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
             <div className="flex space-x-2 mb-2">
               <button
                 onClick={handleRangeSelect}
-                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-3 py-1 text-s bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               >
                 Seleccionar Rango
               </button>
               <button
                 onClick={clearSelection}
-                className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                className="px-3 py-1 text-s bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
                 Limpiar Selección
               </button>
@@ -414,7 +412,7 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
               <button
                 onClick={handleDisableSelected}
                 disabled={selectedPanels.size === 0}
-                className="px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-s bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Deshabilitar Seleccionados
               </button>
@@ -423,27 +421,27 @@ const GroupDetail3D: React.FC<GroupDetail3DProps> = ({
                 disabled={
                   selectedPanels.size === 0 || !hasInactiveSelectedPanels
                 }
-                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-s bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Habilitar Seleccionados
               </button>
 
               <button
                 onClick={handleDisableGroup}
-                className="px-3 py-1 text-xs bg-red-800 text-white rounded hover:bg-red-900 transition-colors"
+                className="px-3 py-1 text-s bg-red-800 text-white rounded hover:bg-red-900 transition-colors"
               >
                 Deshabilitar Grupo
               </button>
               <button
                 onClick={handleEnableGroup}
                 disabled={!hasInactivePanelsInGroup}
-                className="px-3 py-1 text-xs bg-green-800 text-white rounded hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-s bg-green-800 text-white rounded hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Habilitar Grupo
               </button>
             </section>
 
-            <div className="text-xs text-gray-700">
+            <div className="text-s text-gray-700">
               <p>
                 • Haz clic en las placas para seleccionarlas individualmente
               </p>

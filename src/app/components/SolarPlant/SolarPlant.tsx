@@ -576,9 +576,9 @@ const SolarPanelLayout: React.FC = () => {
         onGroupChange={handleGroupChange}
       />
 
-      <PanelStats className="fixed top-[30%] left-[21%] z-20 min-w-[200px]" />
+      <PanelStats className="fixed top-[4%] right-[7%] md:top-[4%] md:right-[7%] lg:top-[4%] lg:right-[7%] xl:top-[4%] xl:right-[7%] 2xl:top-[30%] 2xl:right-[66%] z-20 min-w-[200px]" />
 
-      <QuickControls className="fixed top-[14.5%] left-[21%] z-20 min-w-[200px]" />
+      <QuickControls className="fixed top-[4%] left-[35%] md:top-[4%] md:left-[35%] lg:top-[4%] lg:left-[35%] xl:top-[4%] xl:left-[35%] 2xl:top-[14.5%] 2xl:left-[21%] z-20 min-w-[200px]" />
 
       <Modal
         isOpen={isModalOpen}
