@@ -159,7 +159,7 @@ const GroupScene: React.FC<GroupSceneProps> = ({
     const maxY = Math.max(...positions.map((p) => p.y));
 
     const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
+    const centerY = minY + (maxY - minY) * 0.2;
     const groupWidth = maxX - minX;
     const groupHeight = maxY - minY;
 
