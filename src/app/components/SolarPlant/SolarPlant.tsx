@@ -271,6 +271,8 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
       rotateSpeed={0.8}
       zoomSpeed={0.8}
       onChange={handleZoom}
+      enableZoom={true}
+      enableRotate={true}
     />
   );
 };
@@ -476,11 +478,14 @@ const SolarPanelLayout: React.FC = () => {
       ),
     );
 
-    return [centroid.x, centroid.y, maxDistance * 2.5] as [
-      number,
-      number,
-      number,
-    ];
+    const distance = maxDistance * 1.8;
+    const angle = Math.PI / 3;
+
+    const x = centroid.x;
+    const y = centroid.y - distance * Math.sin(angle);
+    const z = centroid.z + distance * Math.cos(angle);
+
+    return [x, y, z] as [number, number, number];
   }, [parcela, agrupaciones]);
 
   useEffect(() => {
