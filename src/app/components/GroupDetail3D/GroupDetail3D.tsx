@@ -160,13 +160,13 @@ const GroupScene: React.FC<GroupSceneProps> = ({
     const safeHeight = Math.max(groupHeight, 1);
     const groupSize = Math.max(safeWidth, safeHeight);
 
-    const frustumSize = Math.max(1, groupSize * 1.15);
+    const frustumSize = Math.max(1, groupSize * 1.9);
 
     return { centerX, centerY, frustumSize };
   }, [groupData]);
 
   const aspectRatio = 600 / 400;
-  const cameraZ = Math.max(15, frustumSize * 0.08);
+  const cameraZ = Math.max(25, frustumSize * 0.15);
 
   return (
     <>
@@ -188,7 +188,7 @@ const GroupScene: React.FC<GroupSceneProps> = ({
         bottom={frustumSize / -2}
         near={0.1}
         far={1000}
-        position={[0, 0, Math.max(30, cameraZ)]}
+        position={[0, 0, Math.max(40, cameraZ)]}
         onUpdate={(camera) => {
           camera.lookAt(0, 0, 0);
           camera.up.set(0, 1, 0);
