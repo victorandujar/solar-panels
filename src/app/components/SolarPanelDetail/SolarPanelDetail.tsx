@@ -4,6 +4,11 @@ import React, { useMemo, useRef, createElement, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import {
+  useSolarPanelStore,
+  usePanelActive,
+  type SolarPanelState,
+} from "../../../store/useStore";
 
 interface SolarPanelDetailProps {
   panelData: {
@@ -319,9 +324,36 @@ const SolarPanelScene: React.FC<SolarPanelSceneProps> = ({ panelData }) => {
 };
 
 const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({ panelData }) => {
+  // Zustand store para manejar el estado del panel
+  const togglePanel = useSolarPanelStore(
+    (state: SolarPanelState) => state.togglePanel,
+  );
+  const isActive = usePanelActive(panelData.panelId);
+
+  const handleTogglePanel = () => {
+    togglePanel(panelData.panelId);
+  };
+
   return (
     <div className="space-y-4">
       <div className="bg-transparent rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
+        {/* Control de Estado del Panel */}
+        <div className="mb-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-white">
+            Panel {panelData.panelId}
+          </h3>
+          <button
+            onClick={handleTogglePanel}
+            className={`px-4 py-2 rounded-md font-semibold transition-all duration-200 ${
+              isActive
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-gray-600 hover:bg-gray-700 text-gray-200"
+            }`}
+          >
+            {isActive ? "✓ Activo" : "✗ Inactivo"}
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="h-[250px] w-full">
