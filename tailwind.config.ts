@@ -21,6 +21,10 @@ const config: Config = {
         ms: "var(--font-MS)",
         mss: "var(--font-MSS)",
       },
+      fontFamily: {
+        audiowide: ["var(--font-audiowide)", "sans-serif"],
+        montserrat: ["var(--font-montserrat)", "sans-serif"],
+      },
     },
   },
   plugins: [],

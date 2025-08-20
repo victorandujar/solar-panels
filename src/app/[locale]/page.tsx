@@ -9,7 +9,9 @@ const HomePage: React.FC = () => {
       <section className="w-full h-fit relative" style={{ zIndex: 2 }}>
         <div className="w-full"></div>
         <div className="w-full ">
-          <h1 className="text-5xl font-bold p-5 text-black">Solar Panels</h1>
+          <h1 className="text-5xl font-bold p-5 text-black font-audiowide">
+            Solar Panels
+          </h1>
           <SolarPanelLayout />
         </div>
       </section>
