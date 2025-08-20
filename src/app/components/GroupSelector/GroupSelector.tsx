@@ -20,7 +20,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
   onGroupChange,
 }) => {
   return (
-    <div className="absolute top-32 left-5 border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-black z-10">
+    <div className="border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] rounded-lg p-4 text-black">
       <h3 className="text-sm font-semibold mb-3 flex items-center text-gray-800 drop-shadow-sm">
         <svg
           className="w-4 h-4 mr-2"
