@@ -25,12 +25,10 @@ export interface PanelGroup {
   color?: string;
 }
 
-// State interface
 export interface SolarPanelState {
   groups: PanelGroup[];
   panels: Panel[];
 
-  // Actions
   disablePanels: (ids: string[]) => void;
   enablePanel: (id: string) => void;
   enablePanels: (ids: string[]) => void;
@@ -42,7 +40,6 @@ export interface SolarPanelState {
   toggleGroup: (groupId: string) => void;
   initializePanels: () => void;
 
-  // New group management actions
   createGroup: (name: string, color: string, panelIds: string[]) => string;
   movePanel: (panelId: string, targetGroupId: string) => void;
   movePanels: (panelIds: string[], targetGroupId: string) => void;
@@ -52,12 +49,10 @@ export interface SolarPanelState {
   updateGroupColor: (groupId: string, color: string) => void;
 }
 
-// Helper function para generar datos iniciales de paneles
 const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
   const groups: PanelGroup[] = [];
   const panels: Panel[] = [];
 
-  // Default colors for groups
   const defaultColors = [
     "#4682b4",
     "#32cd32",
@@ -69,7 +64,21 @@ const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
     "#dc143c",
     "#00ced1",
     "#ffa500",
+    "#00ff7f",
+    "#4169e1",
+    "#da70d6",
+    "#ff4500",
+    "#00fa9a",
+    "#1e90ff",
+    "#ff1493",
+    "#00bfff",
+    "#ff8c00",
+    "#ff1493",
   ];
+
+  const getUniqueColor = (groupIndex: number): string => {
+    return defaultColors[groupIndex % defaultColors.length];
+  };
 
   Object.entries(solarData.agrupaciones).forEach(
     ([groupId, points], groupIndex) => {
@@ -95,7 +104,7 @@ const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
         name: `Grupo ${groupId}`,
         panels: groupPanels,
         active: true,
-        color: defaultColors[groupIndex % defaultColors.length],
+        color: getUniqueColor(groupIndex),
       };
 
       groups.push(group);
@@ -288,18 +297,48 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
     }
   },
 
-  // New group management functions
+  getNextAvailableColor: () => {
+    const state = get();
+    const usedColors = new Set(state.groups.map((g) => g.color));
+    const defaultColors = [
+      "#4682b4",
+      "#32cd32",
+      "#ff6347",
+      "#ffd700",
+      "#9370db",
+      "#20b2aa",
+      "#ff69b4",
+      "#dc143c",
+      "#00ced1",
+      "#ffa500",
+      "#00ff7f",
+      "#4169e1",
+      "#da70d6",
+      "#ff4500",
+      "#00fa9a",
+      "#1e90ff",
+      "#ff1493",
+      "#00bfff",
+      "#ff8c00",
+    ];
+
+    for (const color of defaultColors) {
+      if (!usedColors.has(color)) {
+        return color;
+      }
+    }
+    return "#" + Math.floor(Math.random() * 16777215).toString(16);
+  },
+
   createGroup: (name: string, color: string, panelIds: string[]) => {
     const state = get();
 
-    // Validation
     if (!name.trim())
       throw new Error("El nombre del grupo no puede estar vacío");
     if (!color) throw new Error("Debe seleccionar un color para el grupo");
     if (panelIds.length === 0)
       throw new Error("Debe seleccionar al menos un panel");
 
-    // Check if panels exist
     const invalidPanels = panelIds.filter(
       (id) => !state.panels.find((p) => p.id === id),
     );
@@ -310,7 +349,6 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
     const existingIds = state.groups.map((g) => g.id);
     let newGroupId = "1";
 
-    // Find the next available group ID
     for (let i = 1; i <= 1000; i++) {
       if (!existingIds.includes(i.toString())) {
         newGroupId = i.toString();
@@ -321,20 +359,17 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
     const panelsToMove = state.panels.filter((p) => panelIds.includes(p.id));
 
     set((state) => {
-      // Update panels with new group ID
       const newPanels = state.panels.map((panel) =>
         panelIds.includes(panel.id) ? { ...panel, groupId: newGroupId } : panel,
       );
 
-      // Remove panels from old groups
       const updatedGroups = state.groups
         .map((group) => ({
           ...group,
           panels: group.panels.filter((panel) => !panelIds.includes(panel.id)),
         }))
-        .filter((group) => group.panels.length > 0); // Remove empty groups
+        .filter((group) => group.panels.length > 0);
 
-      // Create new group
       const newGroup: PanelGroup = {
         id: newGroupId,
         name: name.trim(),
@@ -362,17 +397,14 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
   movePanels: (panelIds: string[], targetGroupId: string) => {
     const state = get();
 
-    // Validation
     if (panelIds.length === 0)
       throw new Error("Debe seleccionar al menos un panel para mover");
     if (!targetGroupId) throw new Error("Debe especificar un grupo destino");
 
-    // Check if target group exists
     const targetGroup = state.groups.find((g) => g.id === targetGroupId);
     if (!targetGroup)
       throw new Error(`Grupo destino ${targetGroupId} no encontrado`);
 
-    // Check if panels exist
     const invalidPanels = panelIds.filter(
       (id) => !state.panels.find((p) => p.id === id),
     );
@@ -381,18 +413,15 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
     }
 
     set((state) => {
-      // Update panels with new group ID
       const newPanels = state.panels.map((panel) =>
         panelIds.includes(panel.id)
           ? { ...panel, groupId: targetGroupId }
           : panel,
       );
 
-      // Update groups
       const newGroups = state.groups
         .map((group) => {
           if (group.id === targetGroupId) {
-            // Add panels to target group
             const panelsToAdd = state.panels
               .filter((p) => panelIds.includes(p.id))
               .map((panel) => ({ ...panel, groupId: targetGroupId }));
@@ -404,7 +433,6 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
               ],
             };
           } else {
-            // Remove panels from other groups
             return {
               ...group,
               panels: group.panels.filter(
@@ -413,7 +441,7 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
             };
           }
         })
-        .filter((group) => group.panels.length > 0); // Remove empty groups
+        .filter((group) => group.panels.length > 0);
 
       return {
         panels: newPanels,
@@ -431,8 +459,6 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
   },
 
   deleteGroup: (groupId: string) => {
-    // Note: This will move all panels to a default group or delete them
-    // For safety, we'll move them to group "1" if it exists, or create it
     const state = get();
     const groupToDelete = state.groups.find((g) => g.id === groupId);
 
@@ -442,10 +468,8 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
     const panelIds = groupToDelete.panels.map((p) => p.id);
 
     if (defaultGroup && groupId !== "1") {
-      // Move panels to default group
       get().movePanels(panelIds, "1");
     } else {
-      // Create new default group and move panels there
       get().createGroup("Grupo 1", "#4682b4", panelIds);
     }
   },
@@ -467,32 +491,26 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
   },
 }));
 
-// Hook personalizado para obtener solo paneles
 export const usePanels = () => {
   return useSolarPanelStore((state) => state.panels);
 };
 
-// Hook personalizado para obtener solo grupos
 export const useGroups = () => {
   return useSolarPanelStore((state) => state.groups);
 };
 
-// Hook personalizado para obtener paneles activos
 export const useActivePanels = () => {
   return useSolarPanelStore((state) =>
     state.panels.filter((panel) => panel.active),
   );
 };
 
-// Hook personalizado para obtener paneles inactivos
 export const useInactivePanels = () => {
   return useSolarPanelStore((state) =>
     state.panels.filter((panel) => !panel.active),
   );
 };
 
-// Hook optimizado para obtener el estado de un panel específico
-// Hook optimizado para obtener el estado de un panel específico
 export const usePanelActive = (panelId: string) => {
   return useSolarPanelStore((state) => {
     const panel = state.panels.find((p) => p.id === panelId);
@@ -500,16 +518,13 @@ export const usePanelActive = (panelId: string) => {
   });
 };
 
-// Cache para los estados de paneles
 let panelStatesCache: {
   key: string;
   states: Record<string, boolean>;
 } | null = null;
 
-// Hook optimizado para obtener todos los estados de paneles activos
 export const useAllPanelStates = () => {
   return useSolarPanelStore((state) => {
-    // Crear una clave basada en el estado actual de todos los paneles
     const activePanelIds = state.panels
       .filter((p) => p.active)
       .map((p) => p.id)
@@ -518,18 +533,15 @@ export const useAllPanelStates = () => {
     const totalPanels = state.panels.length;
     const cacheKey = `${totalPanels}-${activePanelIds}`;
 
-    // Si el cache existe y la clave coincide, devolver el objeto cacheado
     if (panelStatesCache && panelStatesCache.key === cacheKey) {
       return panelStatesCache.states;
     }
 
-    // Crear nuevo objeto de estados
     const panelStates: Record<string, boolean> = {};
     state.panels.forEach((panel) => {
       panelStates[panel.id] = panel.active;
     });
 
-    // Guardar en cache
     panelStatesCache = {
       key: cacheKey,
       states: panelStates,
@@ -539,12 +551,10 @@ export const useAllPanelStates = () => {
   });
 };
 
-// Hook personalizado para obtener un panel específico
 export const usePanel = (id: string) => {
   return useSolarPanelStore((state) => state.panels.find((p) => p.id === id));
 };
 
-// Cache para las estadísticas
 let statsCache: {
   key: string;
   stats: {
@@ -555,7 +565,6 @@ let statsCache: {
   };
 } | null = null;
 
-// Hook simple y directo para estadísticas con cache manual
 export const usePanelStats = () => {
   return useSolarPanelStore((state) => {
     const totalPanels = state.panels.length;
@@ -564,15 +573,12 @@ export const usePanelStats = () => {
     const panelActivePercentage =
       totalPanels > 0 ? Math.round((activePanels / totalPanels) * 100) : 0;
 
-    // Crear una clave única para este estado
     const cacheKey = `${totalPanels}-${activePanels}`;
 
-    // Si el cache existe y la clave coincide, devolver el objeto cacheado
     if (statsCache && statsCache.key === cacheKey) {
       return statsCache.stats;
     }
 
-    // Crear nuevo objeto y guardarlo en cache
     const newStats = {
       totalPanels,
       activePanels,
@@ -589,7 +595,6 @@ export const usePanelStats = () => {
   });
 };
 
-// Hook personalizado para obtener un grupo específico
 export const useGroup = (groupId: string) => {
   return useSolarPanelStore((state) =>
     state.groups.find((g) => g.id === groupId),

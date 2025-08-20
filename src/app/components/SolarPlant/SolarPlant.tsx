@@ -314,11 +314,6 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   const groups = useSolarPanelStore((state: SolarPanelState) => state.groups);
 
   const { centroid, legendData, panels, maxDistance } = useMemo(() => {
-    const defaultColorPalette = [
-      0x4682b4, 0x32cd32, 0xffa500, 0x8a2be2, 0xff69b4, 0x20b2aa, 0xff6347,
-      0x1e90ff, 0x228b22, 0xffd700,
-    ];
-
     const centroid = parcela.reduce(
       (acc, p) => ({
         x: acc.x + p.X / parcela.length,
@@ -347,8 +342,8 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       if (group.color) {
         color = parseInt(group.color.replace("#", ""), 16);
       } else {
-        const idx = groups.indexOf(group);
-        color = defaultColorPalette[idx % defaultColorPalette.length];
+        // Si no hay color asignado, usar un color por defecto
+        color = 0xcccccc;
       }
 
       const colorHex = "#" + color.toString(16).padStart(6, "0");
@@ -364,8 +359,8 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       if (group.color) {
         color = parseInt(group.color.replace("#", ""), 16);
       } else {
-        const idx = groups.indexOf(group);
-        color = defaultColorPalette[idx % defaultColorPalette.length];
+        // Si no hay color asignado, usar un color por defecto
+        color = 0xcccccc;
       }
 
       group.panels.forEach((panel) => {
