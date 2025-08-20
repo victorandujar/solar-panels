@@ -342,7 +342,6 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       if (group.color) {
         color = parseInt(group.color.replace("#", ""), 16);
       } else {
-        // Si no hay color asignado, usar un color por defecto
         color = 0xcccccc;
       }
 
@@ -359,7 +358,6 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       if (group.color) {
         color = parseInt(group.color.replace("#", ""), 16);
       } else {
-        // Si no hay color asignado, usar un color por defecto
         color = 0xcccccc;
       }
 
@@ -734,15 +732,20 @@ const SolarPanelLayout: React.FC = () => {
         }`}
       ></div>
 
-      <GroupSelector
-        legendData={legendData}
-        selectedGroup={selectedGroup}
-        onGroupChange={handleGroupChange}
-      />
+      <div className="absolute top-32 left-4 z-20 w-full">
+        <div className="flex md:justify-between 2xl:justify-start gap-4 w-full pr-8">
+          <GroupSelector
+            legendData={legendData}
+            selectedGroup={selectedGroup}
+            onGroupChange={handleGroupChange}
+          />
 
-      <PanelStats className="fixed top-[4%] right-[7%] md:top-[4%] md:right-[7%] lg:top-[4%] lg:right-[7%] xl:top-[4%] xl:right-[7%] 2xl:top-[32%] 2xl:right-[67.9%] z-20 min-w-[200px]" />
-
-      <QuickControls className="fixed top-[4%] left-[35%] md:top-[4%] md:left-[35%] lg:top-[4%] lg:left-[35%] xl:top-[4%] xl:left-[35%] 2xl:top-[14.5%] 2xl:left-[20%] z-20 min-w-[200px]" />
+          <div className="flex flex-col gap-4">
+            <QuickControls className="md:w-72 2xl:w-full" />
+            <PanelStats className="w-72 2xl:w-60" />
+          </div>
+        </div>
+      </div>
 
       <Modal
         isOpen={isModalOpen}
