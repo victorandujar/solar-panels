@@ -8,11 +8,18 @@ import EnergyBackground from "../components/EnergyBackground/EnergyBackground";
 import ThreeCanvas from "../components/ThreeCanvas/ThreeCanvas";
 import { SceneProvider } from "../context/SceneContext";
 
-import { Audiowide } from "next/font/google";
+import { Audiowide, Montserrat } from "next/font/google";
 
-const font = Audiowide({
+const audiowide = Audiowide({
   subsets: ["latin"],
   weight: "400",
+  variable: "--font-audiowide",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-montserrat",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +39,9 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`antialiased ${font.className}`}>
+      <body
+        className={`antialiased ${montserrat.variable} ${audiowide.variable}`}
+      >
         <div id="root-container" className="relative w-full h-screen">
           <SceneProvider>
             <ThreeCanvas />
