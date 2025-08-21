@@ -19,6 +19,7 @@ interface SceneData {
   domRef?: React.RefObject<HTMLDivElement>;
   cameraType?: "perspective" | "orthographic";
   cameraSettings?: any;
+  modifyLayout?: boolean;
 }
 
 interface SceneContextType {

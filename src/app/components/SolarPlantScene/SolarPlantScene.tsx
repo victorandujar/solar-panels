@@ -12,18 +12,14 @@ import {
   type SolarPanelState,
 } from "../../../store/useStore";
 
-import {
-  Point,
-  Agrupacion,
-  SolarData,
-  LegendItem,
-} from "../../types/solar-types";
+import { SolarData, LegendItem } from "../../types/solar-types";
 
 interface SolarPlantSceneProps {
   selectedGroup: string;
   selectedPanels: Set<string>;
   onPanelClick: (panelData: any) => void;
   onCameraUpdate: (legendData: LegendItem[]) => void;
+  modifyLayout: boolean;
 }
 
 const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
@@ -31,6 +27,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   selectedPanels,
   onPanelClick,
   onCameraUpdate,
+  modifyLayout,
 }) => {
   const { agrupaciones, longitud, ancho, parcela, tilt } =
     solarData as SolarData;
@@ -142,7 +139,11 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
         />
       ))}
 
-      <DynamicControls centroid={centroid} maxDistance={maxDistance} />
+      <DynamicControls
+        centroid={centroid}
+        maxDistance={maxDistance}
+        modifyLayout={modifyLayout}
+      />
     </>
   );
 };

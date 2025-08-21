@@ -17,7 +17,6 @@ export function getRenderer(): THREE.WebGLRenderer {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Configurar para múltiples viewports
     renderer.autoClear = false;
   }
   return renderer;
@@ -35,7 +34,6 @@ export function registerScene(
 ) {
   scenes.set(id, { scene, camera, viewport });
 
-  // Iniciar el render loop si no está activo
   if (!isRenderLoopActive) {
     startRenderLoop();
   }
@@ -44,7 +42,6 @@ export function registerScene(
 export function unregisterScene(id: string) {
   scenes.delete(id);
 
-  // Detener el render loop si no hay escenas
   if (scenes.size === 0) {
     isRenderLoopActive = false;
   }
@@ -65,19 +62,15 @@ function startRenderLoop() {
   function animate() {
     if (!isRenderLoopActive || !renderer) return;
 
-    // Limpiar el canvas
     renderer.clear();
 
-    // Renderizar cada escena en su viewport
     scenes.forEach(({ scene, camera, viewport }) => {
       if (!renderer) return;
 
-      // Configurar el viewport
       renderer.setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
       renderer.setScissor(viewport.x, viewport.y, viewport.z, viewport.w);
       renderer.setScissorTest(true);
 
-      // Renderizar la escena
       renderer.render(scene, camera);
     });
 
@@ -87,7 +80,6 @@ function startRenderLoop() {
   animate();
 }
 
-// Función para redimensionar el renderer y actualizar viewports
 export function handleResize() {
   if (!renderer || typeof window === "undefined") return;
 
@@ -97,8 +89,6 @@ export function handleResize() {
   renderer.setSize(width, height);
   renderer.setPixelRatio(window.devicePixelRatio);
 
-  // Aquí puedes actualizar los viewports según sea necesario
-  // Por ejemplo, para un viewport que ocupe toda la pantalla:
   scenes.forEach((sceneData, id) => {
     if (id === "solar-plant-main") {
       sceneData.viewport.set(0, 0, width, height);

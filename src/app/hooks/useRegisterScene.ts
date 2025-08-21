@@ -26,7 +26,8 @@ export function useRegisterScene(id: string, sceneData: SceneData) {
 
   useEffect(() => {
     sceneDataRef.current = sceneData;
-  }, [sceneData]);
+    registerScene(id, sceneData);
+  }, [sceneData, id, registerScene]);
 
   useEffect(() => {
     registerScene(id, sceneDataRef.current);

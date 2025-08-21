@@ -1,21 +1,22 @@
 "use client";
 
-import React, { useRef, useMemo, useCallback, useEffect } from "react";
+import React, { useRef, useMemo, useCallback } from "react";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import * as THREE from "three";
 import solarData from "../../../utils/ObjEyeshot.json";
 
-import { Point, Agrupacion, SolarData } from "../../types/solar-types";
+import { SolarData } from "../../types/solar-types";
 
 interface DynamicControlsProps {
   centroid: { x: number; y: number; z: number };
   maxDistance: number;
+  modifyLayout: boolean;
 }
 
 const DynamicControls: React.FC<DynamicControlsProps> = ({
   centroid,
   maxDistance,
+  modifyLayout,
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
@@ -105,7 +106,11 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
   return (
     <OrbitControls
       ref={controlsRef}
-      enableDamping
+      enabled={!modifyLayout}
+      enableDamping={!modifyLayout}
+      enablePan={!modifyLayout}
+      enableZoom={!modifyLayout}
+      enableRotate={!modifyLayout}
       dampingFactor={0.1}
       screenSpacePanning
       minDistance={10}
@@ -113,13 +118,10 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
       target={[centroid.x, centroid.y, centroid.z]}
       maxPolarAngle={Math.PI * 0.8}
       minPolarAngle={Math.PI * 0.1}
-      enablePan={true}
       panSpeed={1.0}
       rotateSpeed={0.8}
       zoomSpeed={0.8}
-      onChange={handleZoom}
-      enableZoom={true}
-      enableRotate={true}
+      onChange={modifyLayout ? undefined : handleZoom}
     />
   );
 };
