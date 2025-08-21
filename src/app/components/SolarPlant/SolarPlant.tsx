@@ -22,12 +22,8 @@ import {
   useSolarPanelStore,
   type SolarPanelState,
 } from "../../../store/useStore";
-import {
-  Point,
-  Agrupacion,
-  SolarData,
-  LegendItem,
-} from "../../types/solar-types";
+import { SolarData, LegendItem } from "../../types/solar-types";
+import { FaEdit } from "react-icons/fa";
 
 const SolarPanelLayout: React.FC = () => {
   const [selectedPanel, setSelectedPanel] = useState<any>(null);
@@ -38,12 +34,14 @@ const SolarPanelLayout: React.FC = () => {
   const [showGroupDetail, setShowGroupDetail] = useState(false);
   const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
   const [showGroupManagement, setShowGroupManagement] = useState(false);
+  const [modifyLayout, setModifyLayout] = useState(false);
 
   const stateRef = useRef({
     isModalOpen,
     showGroupDetail,
     selectedGroupData,
     showGroupManagement,
+    modifyLayout,
   });
 
   useEffect(() => {
@@ -52,8 +50,15 @@ const SolarPanelLayout: React.FC = () => {
       showGroupDetail,
       selectedGroupData,
       showGroupManagement,
+      modifyLayout,
     };
-  }, [isModalOpen, showGroupDetail, selectedGroupData, showGroupManagement]);
+  }, [
+    isModalOpen,
+    showGroupDetail,
+    selectedGroupData,
+    showGroupManagement,
+    modifyLayout,
+  ]);
 
   const initializePanels = useSolarPanelStore(
     (state: SolarPanelState) => state.initializePanels,
@@ -80,6 +85,7 @@ const SolarPanelLayout: React.FC = () => {
     const currentStates = stateRef.current;
 
     if (
+      currentStates.modifyLayout ||
       currentStates.isModalOpen ||
       currentStates.showGroupDetail ||
       currentStates.selectedGroupData ||
@@ -297,6 +303,7 @@ const SolarPanelLayout: React.FC = () => {
           selectedPanels={selectedPanels}
           onPanelClick={handlePanelClick}
           onCameraUpdate={handleCameraUpdate}
+          modifyLayout={modifyLayout}
         />
       </>
     ),
@@ -306,6 +313,7 @@ const SolarPanelLayout: React.FC = () => {
       selectedPanels,
       handlePanelClick,
       handleCameraUpdate,
+      modifyLayout,
     ],
   );
 
@@ -317,8 +325,9 @@ const SolarPanelLayout: React.FC = () => {
         position: cameraPosition,
         makeDefault: true,
       },
+      modifyLayout,
     }),
-    [sceneContent, cameraPosition],
+    [sceneContent, cameraPosition, modifyLayout],
   );
 
   useRegisterScene("solar-plant-main", sceneConfig);
@@ -343,6 +352,17 @@ const SolarPanelLayout: React.FC = () => {
           <div className="flex flex-col gap-4">
             <QuickControls className="md:w-72 2xl:w-full" />
             <PanelStats className="w-72 2xl:w-60" />
+            <button
+              onClick={() => setModifyLayout(!modifyLayout)}
+              className={`px-4 py-2 rounded font-medium transition-colors w-60 text-sm flex justify-center items-center gap-2 ${
+                modifyLayout
+                  ? "bg-red-600 hover:bg-red-500 text-white"
+                  : "bg-blue-500 hover:bg-blue-600 text-white"
+              }`}
+            >
+              <FaEdit />
+              {modifyLayout ? "Desactivar edición" : "Editar layout"}
+            </button>
           </div>
         </div>
       </div>
