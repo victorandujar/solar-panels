@@ -1,6 +1,12 @@
 "use client";
 
 import React from "react";
+import {
+  IoCheckmarkCircleOutline,
+  IoInformationCircleOutline,
+  IoWarningOutline,
+} from "react-icons/io5";
+import { RiAlarmWarningLine } from "react-icons/ri";
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -45,25 +51,25 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       case "danger":
         return {
           confirmButton: "bg-red-600 hover:bg-red-700 text-white",
-          icon: "🚨",
+          icon: <RiAlarmWarningLine className="text-red-600" />,
           titleColor: "text-red-600",
         };
       case "warning":
         return {
           confirmButton: "bg-yellow-600 hover:bg-yellow-700 text-white",
-          icon: "⚠️",
+          icon: <IoWarningOutline className="text-yellow-600" />,
           titleColor: "text-yellow-600",
         };
       case "success":
         return {
           confirmButton: "bg-green-600 hover:bg-green-700 text-white",
-          icon: "✅",
+          icon: <IoCheckmarkCircleOutline className="text-green-600" />,
           titleColor: "text-green-600",
         };
       default:
         return {
           confirmButton: "bg-blue-600 hover:bg-blue-700 text-white",
-          icon: "ℹ️",
+          icon: <IoInformationCircleOutline className="text-blue-600" />,
           titleColor: "text-blue-600",
         };
     }
@@ -73,7 +79,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-s"
       onClick={handleBackdropClick}
     >
       <div
@@ -82,25 +88,25 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       >
         <div className="flex items-center p-6 border-b border-gray-200">
           <span className="text-2xl mr-3">{styles.icon}</span>
-          <h3 className={`text-lg font-semibold ${styles.titleColor}`}>
+          <h3 className={`text-sm font-semibold ${styles.titleColor}`}>
             {title || "Confirmación"}
           </h3>
         </div>
 
         <div className="p-6">
-          <p className="text-gray-700 text-sm leading-relaxed">{message}</p>
+          <p className="text-gray-700 leading-relaxed">{message}</p>
         </div>
 
         <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
           <button
             onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
-            className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${styles.confirmButton}`}
+            className={`px-4 py-2 font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${styles.confirmButton}`}
           >
             {confirmText}
           </button>
