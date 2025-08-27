@@ -20,6 +20,11 @@ interface SolarPlantSceneProps {
   onPanelClick: (panelData: any) => void;
   onCameraUpdate: (legendData: LegendItem[]) => void;
   modifyLayout: boolean;
+  onPositionChange?: (
+    panelId: string,
+    newPosition: [number, number, number],
+  ) => void;
+  onGroupChange?: (panelId: string, newGroupId: string) => void;
 }
 
 const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
@@ -28,6 +33,8 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   onPanelClick,
   onCameraUpdate,
   modifyLayout,
+  onPositionChange,
+  onGroupChange,
 }) => {
   const { agrupaciones, longitud, ancho, parcela, tilt } =
     solarData as SolarData;
@@ -136,6 +143,9 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
           isHighlighted={selectedPanels.has(panel.panelId)}
           isActive={panelStates[panel.panelId] ?? true}
           onClick={onPanelClick}
+          modifyLayout={modifyLayout}
+          onPositionChange={onPositionChange}
+          onGroupChange={onGroupChange}
         />
       ))}
 

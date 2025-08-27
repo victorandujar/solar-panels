@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useRef, useMemo, useCallback, createElement } from "react";
+import React, { useCallback, createElement } from "react";
 import { ThreeEvent } from "@react-three/fiber";
-import * as THREE from "three";
-
-import { Point } from "../../types/solar-types";
+import { useSolarPanel } from "../../hooks/useSolarPanel";
 
 interface SolarPanelProps {
   position: [number, number, number];
@@ -19,6 +17,12 @@ interface SolarPanelProps {
   isHighlighted: boolean;
   isActive: boolean;
   onClick: (panelData: any) => void;
+  modifyLayout: boolean;
+  onPositionChange?: (
+    panelId: string,
+    newPosition: [number, number, number],
+  ) => void;
+  onGroupChange?: (panelId: string, newGroupId: string) => void;
 }
 
 const SolarPanel: React.FC<SolarPanelProps> = ({
@@ -34,49 +38,29 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
   isHighlighted,
   isActive,
   onClick,
+  modifyLayout,
+  onPositionChange,
+  onGroupChange,
 }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  const materialProps = useMemo(() => {
-    let emissiveIntensity = 0.25;
-    let opacity = 1;
-    let transparent = false;
-    let finalColor = new THREE.Color(color);
-
-    if (!isActive) {
-      finalColor = new THREE.Color(0xcccccc);
-      emissiveIntensity = 0.1;
-      opacity = 0.6;
-      transparent = true;
-    } else if (isHighlighted) {
-      emissiveIntensity = 3.0;
-      opacity = 1;
-      transparent = true;
-      finalColor = new THREE.Color(0xffff00);
-    } else if (isGroupSelected) {
-      emissiveIntensity = 1.5;
-      opacity = 1;
-      transparent = true;
-    } else if (isSelected) {
-      emissiveIntensity = 0.1;
-      opacity = 0.9;
-      transparent = true;
-    }
-
-    return {
-      color: finalColor,
-      side: THREE.DoubleSide,
-      metalness: 0.2,
-      roughness: 0.2,
-      emissive: finalColor,
-      emissiveIntensity,
-      opacity,
-      transparent,
-    };
-  }, [color, isSelected, isGroupSelected, isHighlighted, isActive]);
+  const { meshRef, materialProps, bind } = useSolarPanel({
+    position,
+    groupId,
+    panelId,
+    dimensions,
+    color,
+    isSelected,
+    isGroupSelected,
+    isHighlighted,
+    isActive,
+    modifyLayout,
+    onPositionChange,
+    onGroupChange,
+  });
 
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
+      if (modifyLayout) return;
+
       event.stopPropagation();
       const panelData = {
         groupId,
@@ -87,7 +71,15 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
       };
       onClick(panelData);
     },
-    [groupId, panelId, position, inclination, dimensions, onClick],
+    [
+      groupId,
+      panelId,
+      position,
+      inclination,
+      dimensions,
+      onClick,
+      modifyLayout,
+    ],
   );
 
   return createElement(
@@ -97,6 +89,12 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
       position,
       rotation,
       onClick: handleClick,
+      userData: {
+        panelId,
+        groupId,
+        isDraggable: modifyLayout,
+      },
+      ...(modifyLayout ? bind() : {}),
     },
     createElement("planeGeometry" as any, {
       args: [dimensions.length, dimensions.width],
