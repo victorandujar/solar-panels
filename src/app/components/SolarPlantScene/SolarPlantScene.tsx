@@ -5,6 +5,7 @@ import * as THREE from "three";
 import solarData from "../../../utils/ObjEyeshot.json";
 import SolarPanel from "../SolarPanel/SolarPanel";
 import Terrain from "../Terrain/Terrain";
+import Fence from "../Fence/Fence";
 import DynamicControls from "../DynamicControls/DynamicControls";
 import {
   useAllPanelStates,
@@ -127,6 +128,8 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       {createElement("axesHelper" as any, { args: [100] })}
 
       <Terrain parcela={parcela} />
+
+      <Fence parcela={parcela} height={0.5} color={0x00ff00} lineWidth={4} />
 
       {panels.map((panel) => (
         <SolarPanel
