@@ -47,6 +47,7 @@ export interface SolarPanelState {
   deleteGroup: (groupId: string) => void;
   updateGroupName: (groupId: string, name: string) => void;
   updateGroupColor: (groupId: string, color: string) => void;
+  updatePanelPosition: (panelId: string, position: Point) => void;
 }
 
 const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
@@ -488,6 +489,26 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
         group.id === groupId ? { ...group, color } : group,
       ),
     }));
+  },
+
+  updatePanelPosition: (panelId: string, position: Point) => {
+    set((state) => {
+      const newPanels = state.panels.map((panel) =>
+        panel.id === panelId ? { ...panel, position } : panel,
+      );
+
+      const newGroups = state.groups.map((group) => ({
+        ...group,
+        panels: group.panels.map((panel) =>
+          panel.id === panelId ? { ...panel, position } : panel,
+        ),
+      }));
+
+      return {
+        panels: newPanels,
+        groups: newGroups,
+      };
+    });
   },
 }));
 

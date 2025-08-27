@@ -21,6 +21,7 @@ import { useRegisterScene } from "../../hooks/useRegisterScene";
 import {
   useSolarPanelStore,
   type SolarPanelState,
+  type Point,
 } from "../../../store/useStore";
 import { SolarData, LegendItem } from "../../types/solar-types";
 import { FaEdit } from "react-icons/fa";
@@ -64,6 +65,12 @@ const SolarPanelLayout: React.FC = () => {
     (state: SolarPanelState) => state.initializePanels,
   );
   const groups = useSolarPanelStore((state: SolarPanelState) => state.groups);
+  const movePanel = useSolarPanelStore(
+    (state: SolarPanelState) => state.movePanel,
+  );
+  const updatePanelPosition = useSolarPanelStore(
+    (state: SolarPanelState) => state.updatePanelPosition,
+  );
 
   const rootRef = useRef<HTMLDivElement>(null!);
 
@@ -249,6 +256,26 @@ const SolarPanelLayout: React.FC = () => {
     },
     [groups],
   );
+
+  const handlePositionChange = useCallback(
+    (panelId: string, newPosition: [number, number, number]) => {
+      const position: Point = {
+        X: newPosition[0],
+        Y: newPosition[1],
+        Z: newPosition[2],
+      };
+      updatePanelPosition(panelId, position);
+    },
+    [updatePanelPosition],
+  );
+
+  const handlePanelGroupChange = useCallback(
+    (panelId: string, newGroupId: string) => {
+      movePanel(panelId, newGroupId);
+    },
+    [movePanel],
+  );
+
   const { agrupaciones, parcela } = solarData as SolarData;
 
   const cameraPosition = useMemo(() => {
@@ -304,6 +331,8 @@ const SolarPanelLayout: React.FC = () => {
           onPanelClick={handlePanelClick}
           onCameraUpdate={handleCameraUpdate}
           modifyLayout={modifyLayout}
+          onPositionChange={handlePositionChange}
+          onGroupChange={handlePanelGroupChange}
         />
       </>
     ),
@@ -314,6 +343,8 @@ const SolarPanelLayout: React.FC = () => {
       handlePanelClick,
       handleCameraUpdate,
       modifyLayout,
+      handlePositionChange,
+      handlePanelGroupChange,
     ],
   );
 
@@ -363,6 +394,19 @@ const SolarPanelLayout: React.FC = () => {
               <FaEdit />
               {modifyLayout ? "Desactivar edición" : "Editar layout"}
             </button>
+            {modifyLayout && (
+              <section className="flex flex-col gap-2 text-black border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] w-60 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <h1 className="text-sm font-medium">Modo de edición:</h1>
+                  <span className="text-sm font-medium text-green-700">
+                    Activado
+                  </span>
+                </div>
+                <span className="text-xs">
+                  Puedes mover las placas y recrear grupos de placas.
+                </span>
+              </section>
+            )}
           </div>
         </div>
       </div>
