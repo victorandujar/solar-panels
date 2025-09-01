@@ -341,7 +341,7 @@ const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({
     <div className="space-y-4">
       <div className="bg-transparent rounded-lg p-6 shadow-2xl backdrop-blur-md border border-gray-500/20">
         <div className="mb-4 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold text-gray-700">
             Panel {panelData.panelId}
           </h3>
           <button
@@ -376,7 +376,7 @@ const SolarPanelDetail: React.FC<SolarPanelDetailProps> = ({
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-white flex items-center">
+            <h4 className="text-sm font-semibold text-gray-700 flex items-center">
               <svg
                 className="w-4 h-4 mr-2"
                 fill="none"

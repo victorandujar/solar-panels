@@ -79,28 +79,28 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-s"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 rounded-lg text-sm"
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100"
+        className="backdrop-blur-sm border border-mainColor/30 ease-in-out bg-black/10 rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center p-6 border-b border-gray-200">
+        <div className="flex items-center p-6 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
           <span className="text-2xl mr-3">{styles.icon}</span>
           <h3 className={`text-sm font-semibold ${styles.titleColor}`}>
             {title || "Confirmación"}
           </h3>
         </div>
 
-        <div className="p-6">
-          <p className="text-gray-700 leading-relaxed">{message}</p>
+        <div className="p-6 bg-white/60 backdrop-blur-sm">
+          <p className="text-gray-800 leading-relaxed font-medium">{message}</p>
         </div>
 
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-white/80 backdrop-blur-sm rounded-b-lg">
           <button
             onClick={handleCancel}
-            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            className="px-4 py-2 font-medium text-gray-700 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-md shadow-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
           >
             {cancelText}
           </button>
