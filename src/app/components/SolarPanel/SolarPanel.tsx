@@ -15,8 +15,9 @@ interface SolarPanelProps {
   isSelected: boolean;
   isGroupSelected: boolean;
   isHighlighted: boolean;
+  isSelectedForDeletion?: boolean;
   isActive: boolean;
-  onClick: (panelData: any) => void;
+  onClick: (panelData: any, event?: any) => void;
   modifyLayout: boolean;
   onPositionChange?: (
     panelId: string,
@@ -36,6 +37,7 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
   isSelected,
   isGroupSelected,
   isHighlighted,
+  isSelectedForDeletion = false,
   isActive,
   onClick,
   modifyLayout,
@@ -51,6 +53,7 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
     isSelected,
     isGroupSelected,
     isHighlighted,
+    isSelectedForDeletion,
     isActive,
     modifyLayout,
     onPositionChange,
@@ -59,17 +62,21 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
 
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
-      if (modifyLayout) return;
-
       event.stopPropagation();
       const panelData = {
+        id: panelId,
         groupId,
         panelId,
         position: { x: position[0], y: position[1], z: position[2] },
         inclination,
         dimensions,
       };
-      onClick(panelData);
+
+      if (modifyLayout) {
+        onClick(panelData, event.nativeEvent);
+      } else {
+        onClick(panelData);
+      }
     },
     [
       groupId,
