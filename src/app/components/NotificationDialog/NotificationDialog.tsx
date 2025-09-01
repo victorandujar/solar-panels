@@ -95,15 +95,15 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-s"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 rounded-lg text-sm"
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100"
+        className="backdrop-blur-sm border border-mainColor/30  ease-in-out bg-black/10 rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100"
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className={`flex items-center p-6 border-b ${styles.borderColor} ${styles.bgColor} rounded-t-lg`}
+          className={`flex items-center p-6 border-b ${styles.borderColor} ${styles.bgColor} rounded-t-lg bg-white/80 backdrop-blur-sm`}
         >
           <span className="text-2xl mr-3">{styles.icon}</span>
           <h3 className={`text-sm font-semibold ${styles.titleColor}`}>
@@ -111,11 +111,11 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
           </h3>
         </div>
 
-        <div className="p-6">
-          <p className="text-gray-700 leading-relaxed">{message}</p>
+        <div className="p-6 bg-white/60 backdrop-blur-sm">
+          <p className="text-gray-800 leading-relaxed font-medium">{message}</p>
         </div>
 
-        <div className="flex justify-end p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+        <div className="flex justify-end p-6 border-t border-gray-200 bg-white/80 backdrop-blur-sm rounded-b-lg">
           <button
             onClick={onClose}
             className={`px-6 py-2 font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${styles.button}`}

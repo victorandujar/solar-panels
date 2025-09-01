@@ -61,14 +61,139 @@ body::before {
   height: 100%;
   z-index: -2;
   overflow: hidden;
-  background: linear-gradient(
-    135deg,
-    rgba(136, 138, 255, 0.05) 0%,
-    rgba(107, 203, 184, 0.03) 25%,
-    rgba(0, 93, 99, 0.02) 50%,
-    rgba(255, 137, 88, 0.05) 75%,
-    rgba(136, 138, 255, 0.03) 100%
+  background: radial-gradient(
+    circle at 20% 50%,
+    rgba(147, 51, 234, 0.1) 0%,
+    rgba(59, 130, 246, 0.05) 25%,
+    rgba(0, 0, 0, 0.95) 70%,
+    rgba(0, 0, 0, 0.98) 100%
   );
+}
+
+.energy-base {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(147, 51, 234, 0.2) 20%,
+    rgba(59, 130, 246, 0.15) 40%,
+    rgba(147, 51, 234, 0.2) 60%,
+    rgba(236, 72, 153, 0.15) 80%,
+    rgba(147, 51, 234, 0.1) 100%
+  );
+  opacity: 0.3;
+  filter: blur(40px);
+}
+
+.energy-waves {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.energy-wave {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  border-radius: 50%;
+  animation: energyWavePulse 12s ease-in-out infinite;
+}
+
+.wave-primary {
+  background: radial-gradient(
+    circle,
+    transparent 20%,
+    rgba(255, 255, 255, 0.15) 30%,
+    rgba(147, 51, 234, 0.2) 40%,
+    transparent 70%
+  );
+  animation-delay: 0s;
+  filter: blur(20px);
+}
+
+.wave-secondary {
+  background: radial-gradient(
+    circle,
+    transparent 25%,
+    rgba(59, 130, 246, 0.15) 35%,
+    rgba(147, 51, 234, 0.18) 45%,
+    transparent 75%
+  );
+  animation-delay: 4s;
+  filter: blur(25px);
+}
+
+.wave-accent {
+  background: radial-gradient(
+    circle,
+    transparent 30%,
+    rgba(236, 72, 153, 0.12) 40%,
+    rgba(147, 51, 234, 0.15) 50%,
+    transparent 80%
+  );
+  animation-delay: 8s;
+  filter: blur(30px);
+}
+
+@keyframes energyWavePulse {
+  0%,
+  100% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0.2;
+  }
+  25% {
+    transform: scale(1.1) rotate(90deg);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3) rotate(180deg);
+    opacity: 0.6;
+  }
+  75% {
+    transform: scale(1.1) rotate(270deg);
+    opacity: 0.4;
+  }
+}
+
+.energy-lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.energy-line {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.8) 20%,
+    rgba(147, 51, 234, 0.9) 50%,
+    rgba(59, 130, 246, 0.8) 80%,
+    transparent 100%
+  );
+  left: var(--x);
+  animation: energyLineFlow var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+  opacity: 0.6;
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.6);
+}
+
+@keyframes energyLineFlow {
+  0%,
+  100% {
+    transform: translateY(-100%) scaleY(0.5);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(0%) scaleY(1);
+    opacity: 0.8;
+  }
 }
 
 .energy-particles {
@@ -79,30 +204,53 @@ body::before {
 
 .energy-particle {
   position: absolute;
-  width: 4px;
-  height: 4px;
-  background: radial-gradient(circle, var(--main-color) 0%, transparent 70%);
+  width: var(--size);
+  height: var(--size);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(147, 51, 234, 0.8) 30%,
+    rgba(59, 130, 246, 0.6) 60%,
+    transparent 100%
+  );
   border-radius: 50%;
   animation: energyFloat var(--duration) ease-in-out infinite;
   animation-delay: var(--delay);
   left: var(--x);
   top: var(--y);
-  opacity: 0.6;
-  box-shadow: 0 0 10px var(--main-color);
+  opacity: 0.8;
+  box-shadow:
+    0 0 15px rgba(147, 51, 234, 0.8),
+    0 0 30px rgba(59, 130, 246, 0.6),
+    0 0 45px rgba(147, 51, 234, 0.4);
 }
 
 .energy-particle:nth-child(even) {
-  background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
-  box-shadow: 0 0 10px var(--primary-color);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(59, 130, 246, 0.8) 30%,
+    rgba(147, 51, 234, 0.6) 60%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 15px rgba(59, 130, 246, 0.8),
+    0 0 30px rgba(147, 51, 234, 0.6),
+    0 0 45px rgba(59, 130, 246, 0.4);
 }
 
 .energy-particle:nth-child(3n) {
   background: radial-gradient(
     circle,
-    var(--tertiary-color) 0%,
-    transparent 70%
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(236, 72, 153, 0.8) 30%,
+    rgba(147, 51, 234, 0.6) 60%,
+    transparent 100%
   );
-  box-shadow: 0 0 10px var(--tertiary-color);
+  box-shadow:
+    0 0 15px rgba(236, 72, 153, 0.8),
+    0 0 30px rgba(147, 51, 234, 0.6),
+    0 0 45px rgba(236, 72, 153, 0.4);
 }
 
 @keyframes energyFloat {
@@ -183,11 +331,79 @@ body::before {
   }
 }
 
+.energy-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: glowPulse 8s ease-in-out infinite;
+}
+
+.glow-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(
+    circle,
+    rgba(147, 51, 234, 0.3) 0%,
+    rgba(59, 130, 246, 0.2) 50%,
+    transparent 100%
+  );
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.glow-2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.25) 0%,
+    rgba(147, 51, 234, 0.15) 50%,
+    transparent 100%
+  );
+  top: 60%;
+  right: 20%;
+  animation-delay: 3s;
+}
+
+.glow-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(
+    circle,
+    rgba(236, 72, 153, 0.2) 0%,
+    rgba(147, 51, 234, 0.1) 50%,
+    transparent 100%
+  );
+  bottom: 15%;
+  left: 60%;
+  animation-delay: 6s;
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
+}
+
 .energy-grid {
   position: absolute;
   width: 100%;
   height: 100%;
-  opacity: 0.3;
+  opacity: 0.4;
 }
 
 .grid-svg {
@@ -198,19 +414,24 @@ body::before {
 
 @keyframes gridFlow {
   0% {
-    transform: translateX(0) translateY(0);
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 0.4;
   }
   25% {
-    transform: translateX(-5px) translateY(-5px);
+    transform: translateX(-8px) translateY(-8px) scale(1.02);
+    opacity: 0.6;
   }
   50% {
-    transform: translateX(5px) translateY(5px);
+    transform: translateX(8px) translateY(8px) scale(0.98);
+    opacity: 0.5;
   }
   75% {
-    transform: translateX(-3px) translateY(3px);
+    transform: translateX(-4px) translateY(4px) scale(1.01);
+    opacity: 0.7;
   }
   100% {
-    transform: translateX(0) translateY(0);
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 0.4;
   }
 }
 

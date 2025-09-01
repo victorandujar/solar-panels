@@ -127,15 +127,15 @@ const SolarPanelLayout: React.FC = () => {
               onClick={() => setModifyLayout(!state.modifyLayout)}
               className={`px-4 py-2 rounded font-medium transition-colors w-60 text-sm flex justify-center items-center gap-2 ${
                 state.modifyLayout
-                  ? "bg-red-600 hover:bg-red-500 text-white"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
+                  ? "bg-red-600/70 hover:bg-red-500 backdrop-blur-sm border border-red-500/70 transition-all duration-500 ease-in-out rounded-lg p-4  text-white"
+                  : "bg-blue-500/70 hover:bg-blue-600 backdrop-blur-sm border border-blue-500/70 transition-all duration-500 ease-in-out rounded-lg p-4  text-white"
               }`}
             >
               <FaEdit />
               {state.modifyLayout ? "Desactivar edición" : "Editar layout"}
             </button>
             {state.modifyLayout && (
-              <section className="flex flex-col gap-2 text-black border border-white/30 bg-white/10 backdrop-blur-lg shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] w-60 p-4 rounded-lg">
+              <section className="flex flex-col gap-2 text-black backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 w-60">
                 <button
                   onClick={handleAddPanel}
                   className="flex items-center justify-center gap-2 text-sm bg-black/70 backdrop-blur-lg p-2 rounded-lg text-white hover:bg-black/80 transition-colors"
