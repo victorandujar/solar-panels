@@ -88,61 +88,130 @@ export const useSolarPanel = ({
     };
   }, [parcela]);
 
+  const isPointInFence = useCallback(
+    (x: number, y: number): boolean => {
+      if (!parcela || parcela.length === 0) return false;
+
+      let inside = false;
+      const n = parcela.length;
+
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = parcela[i].X;
+        const yi = parcela[i].Y;
+        const xj = parcela[j].X;
+        const yj = parcela[j].Y;
+
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+          inside = !inside;
+        }
+      }
+
+      return inside;
+    },
+    [parcela],
+  );
+
   const isPointInParcel = useCallback(
     (x: number, y: number, z: number): boolean => {
+      if (!isPointInFence(x, y)) {
+        return false;
+      }
+
       const bounds = getParcelBounds();
-      return (
-        x >= bounds.minX &&
-        x <= bounds.maxX &&
-        y >= bounds.minY &&
-        y <= bounds.maxY &&
-        z >= bounds.minZ &&
-        z <= bounds.maxZ
-      );
+      return z >= bounds.minZ && z <= bounds.maxZ;
     },
-    [getParcelBounds],
+    [isPointInFence, getParcelBounds],
+  );
+
+  const findClosestPointInFence = useCallback(
+    (x: number, y: number): [number, number] => {
+      if (!parcela || parcela.length === 0) return [x, y];
+
+      if (isPointInFence(x, y)) {
+        return [x, y];
+      }
+
+      let closestPoint: [number, number] = [x, y];
+      let minDistance = Infinity;
+
+      for (let i = 0; i < parcela.length; i++) {
+        const p1 = parcela[i];
+        const p2 = parcela[(i + 1) % parcela.length];
+
+        const A = x - p1.X;
+        const B = y - p1.Y;
+        const C = p2.X - p1.X;
+        const D = p2.Y - p1.Y;
+
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+
+        let param = -1;
+        if (lenSq !== 0) {
+          param = dot / lenSq;
+        }
+
+        let xx, yy;
+        if (param < 0) {
+          xx = p1.X;
+          yy = p1.Y;
+        } else if (param > 1) {
+          xx = p2.X;
+          yy = p2.Y;
+        } else {
+          xx = p1.X + param * C;
+          yy = p1.Y + param * D;
+        }
+
+        const distance = Math.sqrt((x - xx) * (x - xx) + (y - yy) * (y - yy));
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPoint = [xx, yy];
+        }
+      }
+
+      return closestPoint;
+    },
+    [parcela, isPointInFence],
   );
 
   const clampToParcel = useCallback(
     (x: number, y: number, z: number): [number, number, number] => {
       const bounds = getParcelBounds();
-      return [
-        Math.max(bounds.minX, Math.min(bounds.maxX, x)),
-        Math.max(bounds.minY, Math.min(bounds.maxY, y)),
-        Math.max(bounds.minZ, Math.min(bounds.maxZ, z)),
-      ];
+      const clampedZ = Math.max(bounds.minZ, Math.min(bounds.maxZ, z));
+
+      if (isPointInFence(x, y)) {
+        return [x, y, clampedZ];
+      }
+
+      const [clampedX, clampedY] = findClosestPointInFence(x, y);
+      return [clampedX, clampedY, clampedZ];
     },
-    [getParcelBounds],
+    [getParcelBounds, isPointInFence, findClosestPointInFence],
   );
 
   const applyBoundaryResistance = useCallback(
     (x: number, y: number, z: number): [number, number, number] => {
-      const bounds = getParcelBounds();
+      if (isPointInFence(x, y)) {
+        return [x, y, z];
+      }
+
+      const [closestX, closestY] = findClosestPointInFence(x, y);
+      const distanceToEdge = Math.sqrt(
+        (x - closestX) * (x - closestX) + (y - closestY) * (y - closestY),
+      );
+
       const resistanceZone = 50;
+      const resistanceFactor = Math.min(distanceToEdge / resistanceZone, 1);
 
-      let clampedX = x;
-      let clampedY = y;
-      let clampedZ = z;
+      const resistedX =
+        closestX + (x - closestX) * (1 - resistanceFactor * 0.8);
+      const resistedY =
+        closestY + (y - closestY) * (1 - resistanceFactor * 0.8);
 
-      if (x < bounds.minX + resistanceZone) {
-        const factor = (x - bounds.minX) / resistanceZone;
-        clampedX = bounds.minX + (x - bounds.minX) * Math.max(0.1, factor);
-      } else if (x > bounds.maxX - resistanceZone) {
-        const factor = (bounds.maxX - x) / resistanceZone;
-        clampedX = bounds.maxX - (bounds.maxX - x) * Math.max(0.1, factor);
-      }
-
-      if (y < bounds.minY + resistanceZone) {
-        const factor = (y - bounds.minY) / resistanceZone;
-        clampedY = bounds.minY + (y - bounds.minY) * Math.max(0.1, factor);
-      } else if (y > bounds.maxY - resistanceZone) {
-        const factor = (bounds.maxY - y) / resistanceZone;
-        clampedY = bounds.maxY - (bounds.maxY - y) * Math.max(0.1, factor);
-      }
-
-      return [clampedX, clampedY, clampedZ];
+      return [resistedX, resistedY, z];
     },
-    [getParcelBounds],
+    [isPointInFence, findClosestPointInFence],
   );
 
   const applySnapping = useCallback(
