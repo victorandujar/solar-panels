@@ -39,6 +39,9 @@ export interface SolarPanelState {
   enableGroup: (groupId: string) => void;
   toggleGroup: (groupId: string) => void;
   initializePanels: () => void;
+  addPanel: (position: Point) => string;
+  deletePanel: (panelId: string) => void;
+  deletePanels: (panelIds: string[]) => void;
 
   createGroup: (name: string, color: string, panelIds: string[]) => string;
   movePanel: (panelId: string, targetGroupId: string) => void;
@@ -115,7 +118,6 @@ const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
   return { groups, panels };
 };
 
-// Zustand store
 export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
   groups: [],
   panels: [],
@@ -503,6 +505,127 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
           panel.id === panelId ? { ...panel, position } : panel,
         ),
       }));
+
+      return {
+        panels: newPanels,
+        groups: newGroups,
+      };
+    });
+  },
+
+  addPanel: (position: Point) => {
+    const state = get();
+
+    const existingIds = state.panels.map((p) => p.id);
+    let newPanelId = `new-panel-${Date.now()}`;
+    let counter = 1;
+    while (existingIds.includes(newPanelId)) {
+      newPanelId = `new-panel-${Date.now()}-${counter}`;
+      counter++;
+    }
+
+    const newPanel: Panel = {
+      id: newPanelId,
+      name: `Panel ${newPanelId}`,
+      active: true,
+      groupId: "unassigned",
+      position,
+      index: state.panels.length,
+    };
+
+    let unassignedGroup = state.groups.find((g) => g.id === "unassigned");
+
+    set((state) => {
+      const newPanels = [...state.panels, newPanel];
+      let newGroups = [...state.groups];
+
+      if (!unassignedGroup) {
+        unassignedGroup = {
+          id: "unassigned",
+          name: "Sin asignar",
+          panels: [newPanel],
+          active: true,
+          color: "#ffffff",
+        };
+        newGroups.push(unassignedGroup);
+      } else {
+        newGroups = newGroups.map((group) =>
+          group.id === "unassigned"
+            ? { ...group, panels: [...group.panels, newPanel] }
+            : group,
+        );
+      }
+
+      return {
+        panels: newPanels,
+        groups: newGroups,
+      };
+    });
+
+    return newPanelId;
+  },
+
+  deletePanel: (panelId: string) => {
+    get().deletePanels([panelId]);
+  },
+
+  deletePanels: (panelIds: string[]) => {
+    const state = get();
+
+    if (panelIds.length === 0) return;
+
+    const invalidPanels = panelIds.filter(
+      (id) => !state.panels.find((p) => p.id === id),
+    );
+    if (invalidPanels.length > 0) {
+      return;
+    }
+
+    let deletedGroup = state.groups.find((g) => g.id === "-1");
+
+    set((state) => {
+      const newPanels = state.panels.map((panel) =>
+        panelIds.includes(panel.id) ? { ...panel, groupId: "-1" } : panel,
+      );
+
+      let newGroups = [...state.groups];
+
+      if (!deletedGroup) {
+        deletedGroup = {
+          id: "-1",
+          name: "Paneles eliminados",
+          panels: state.panels
+            .filter((p) => panelIds.includes(p.id))
+            .map((panel) => ({ ...panel, groupId: "-1" })),
+          active: false,
+          color: "#666666",
+        };
+        newGroups.push(deletedGroup);
+      } else {
+        newGroups = newGroups
+          .map((group) => {
+            if (group.id === "-1") {
+              const panelsToAdd = state.panels
+                .filter((p) => panelIds.includes(p.id))
+                .map((panel) => ({ ...panel, groupId: "-1" }));
+              return {
+                ...group,
+                panels: [
+                  ...group.panels.filter((p) => !panelIds.includes(p.id)),
+                  ...panelsToAdd,
+                ],
+              };
+            } else {
+              return {
+                ...group,
+                panels: group.panels.filter(
+                  (panel) => !panelIds.includes(panel.id),
+                ),
+              };
+            }
+          })
+          .filter((group) => group.id === "-1" || group.panels.length > 0);
+      }
 
       return {
         panels: newPanels,

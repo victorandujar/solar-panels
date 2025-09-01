@@ -16,6 +16,7 @@ interface UseSolarPanelProps {
   isSelected: boolean;
   isGroupSelected: boolean;
   isHighlighted: boolean;
+  isSelectedForDeletion?: boolean;
   isActive: boolean;
   modifyLayout: boolean;
   onPositionChange?: (
@@ -34,6 +35,7 @@ export const useSolarPanel = ({
   isSelected,
   isGroupSelected,
   isHighlighted,
+  isSelectedForDeletion = false,
   isActive,
   modifyLayout,
   onPositionChange,
@@ -574,6 +576,11 @@ export const useSolarPanel = ({
       opacity = 0.9;
       transparent = true;
       finalColor = new THREE.Color(0xffa500);
+    } else if (isSelectedForDeletion) {
+      emissiveIntensity = 2.5;
+      opacity = 0.8;
+      transparent = true;
+      finalColor = new THREE.Color(0xff4444); // Rojo para selección de eliminación
     } else if (isHighlighted) {
       emissiveIntensity = 3.0;
       opacity = 1;
@@ -604,6 +611,7 @@ export const useSolarPanel = ({
     isSelected,
     isGroupSelected,
     isHighlighted,
+    isSelectedForDeletion,
     isActive,
     isDragging,
     nearbyGroupId,

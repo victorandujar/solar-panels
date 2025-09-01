@@ -18,7 +18,8 @@ import { SolarData, LegendItem } from "../../types/solar-types";
 interface SolarPlantSceneProps {
   selectedGroup: string;
   selectedPanels: Set<string>;
-  onPanelClick: (panelData: any) => void;
+  selectedPanelsForDeletion?: Set<string>;
+  onPanelClick: (panelData: any, event?: any) => void;
   onCameraUpdate: (legendData: LegendItem[]) => void;
   modifyLayout: boolean;
   onPositionChange?: (
@@ -31,6 +32,7 @@ interface SolarPlantSceneProps {
 const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   selectedGroup,
   selectedPanels,
+  selectedPanelsForDeletion = new Set(),
   onPanelClick,
   onCameraUpdate,
   modifyLayout,
@@ -144,6 +146,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
           isSelected={!!selectedGroup && selectedGroup !== panel.groupId}
           isGroupSelected={selectedGroup === panel.groupId}
           isHighlighted={selectedPanels.has(panel.panelId)}
+          isSelectedForDeletion={selectedPanelsForDeletion.has(panel.panelId)}
           isActive={panelStates[panel.panelId] ?? true}
           onClick={onPanelClick}
           modifyLayout={modifyLayout}
