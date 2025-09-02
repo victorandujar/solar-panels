@@ -4,8 +4,6 @@ import React, { useRef, useMemo, useEffect } from "react";
 import { PerspectiveCamera } from "@react-three/drei";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
-import GroupDetail3D from "../GroupDetail3D/GroupDetail3D";
-import GroupManagement from "../GroupManagement/GroupManagement";
 import GroupSelector from "../GroupSelector/GroupSelector";
 import PanelStats from "../PanelStats/PanelStats";
 import QuickControls from "../QuickControls/QuickControls";
@@ -20,15 +18,11 @@ import { useSolarPlant } from "../../hooks/useSolarPlant";
 import { FaEdit, FaPlusSquare, FaTrash, FaTimes } from "react-icons/fa";
 
 const SolarPanelLayout: React.FC = () => {
-  // Usar el hook personalizado que contiene toda la lógica
   const {
     state,
     handlePanelClick,
     handleCameraUpdate,
     handleGroupChange,
-    handleOpenGroupManagement,
-    handleCloseGroupManagement,
-    handleGroupChanged,
     handleOpenGroupManagementFromPanel,
     handlePositionChange,
     handlePanelGroupChange,
@@ -37,15 +31,12 @@ const SolarPanelLayout: React.FC = () => {
     handleClearSelection,
     setModifyLayout,
     handleCloseModal,
-    handleCloseGroupDetail,
-    handlePanelSelectInGroup,
     sceneConfig: baseSceneConfig,
     cameraPosition,
     notificationDialog,
     hideNotification,
   } = useSolarPlant();
 
-  // Inicializar paneles
   const initializePanels = useSolarPanelStore(
     (storeState: SolarPanelState) => storeState.initializePanels,
   );
@@ -56,7 +47,6 @@ const SolarPanelLayout: React.FC = () => {
     initializePanels();
   }, [initializePanels]);
 
-  // Configurar contenido de la escena
   const sceneContent = useMemo(
     () => (
       <>
@@ -92,7 +82,6 @@ const SolarPanelLayout: React.FC = () => {
     ],
   );
 
-  // Configuración completa de escena
   const sceneConfig = useMemo(
     () => ({
       ...baseSceneConfig,
@@ -107,10 +96,21 @@ const SolarPanelLayout: React.FC = () => {
     <>
       <div
         ref={rootRef}
-        className={`h-screen overflow-hidden relative transition-all duration-300 font-mono ${
-          state.showGroupDetail ? "w-1/2" : "w-full"
-        }`}
+        className="h-screen overflow-hidden relative transition-all duration-300 font-mono w-full"
       ></div>
+
+      {state.isLoadingLayout && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-lg rounded-lg shadow-2xl p-8 text-center">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="text-lg font-semibold text-gray-800">
+                Cargando layout...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="absolute top-32 left-4 z-20 w-full">
         <div className="flex md:justify-between 2xl:justify-start gap-4 w-full pr-8">
@@ -199,28 +199,6 @@ const SolarPanelLayout: React.FC = () => {
           />
         )}
       </Modal>
-
-      {state.showGroupDetail &&
-        state.selectedGroupData &&
-        !state.showGroupManagement && (
-          <GroupDetail3D
-            groupData={state.selectedGroupData}
-            selectedPanels={state.selectedPanels}
-            onClose={handleCloseGroupDetail}
-            onPanelSelect={handlePanelSelectInGroup}
-            onOpenManagement={handleOpenGroupManagement}
-          />
-        )}
-
-      {state.showGroupManagement && state.selectedGroupData && (
-        <GroupManagement
-          groupData={state.selectedGroupData}
-          selectedPanels={state.selectedPanels}
-          onClose={handleCloseGroupManagement}
-          onPanelSelect={handlePanelSelectInGroup}
-          onGroupChanged={handleGroupChanged}
-        />
-      )}
 
       <NotificationDialog {...notificationDialog} onClose={hideNotification} />
     </>
