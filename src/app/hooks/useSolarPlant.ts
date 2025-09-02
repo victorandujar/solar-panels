@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import solarData from "../../utils/ObjEyeshot.json";
 import {
   useSolarPanelStore,
@@ -10,19 +11,16 @@ import {
 import { useDialog } from "./useDialog";
 import { SolarData, LegendItem } from "../types/solar-types";
 
-// Interfaces para el hook
 interface SolarPlantState {
-  // Estado de UI
   selectedPanel: any;
   isModalOpen: boolean;
   legendData: LegendItem[];
   selectedGroup: string;
   selectedPanels: Set<string>;
-  showGroupDetail: boolean;
-  selectedGroupData: any;
   showGroupManagement: boolean;
   modifyLayout: boolean;
   selectedPanelsForDeletion: Set<string>;
+  isLoadingLayout: boolean;
 }
 
 interface SolarPlantActions {
@@ -31,7 +29,6 @@ interface SolarPlantActions {
   handleGroupChange: (groupId: string) => void;
   handleOpenGroupManagement: () => void;
   handleCloseGroupManagement: () => void;
-  handleGroupChanged: () => void;
   handleOpenGroupManagementFromPanel: (groupId: string) => void;
   handlePositionChange: (
     panelId: string,
@@ -44,8 +41,6 @@ interface SolarPlantActions {
   setModifyLayout: (modify: boolean) => void;
 
   handleCloseModal: () => void;
-  handleCloseGroupDetail: () => void;
-  handlePanelSelectInGroup: (panelIds: Set<string>) => void;
 
   state: SolarPlantState;
   sceneConfig: any;
@@ -60,23 +55,25 @@ interface UseSolarPlantProps {}
 export const useSolarPlant = (
   props?: UseSolarPlantProps,
 ): SolarPlantActions => {
+  const router = useRouter();
+  const params = useParams();
+  const locale = Array.isArray(params?.locale)
+    ? params.locale[0]
+    : params?.locale || "es";
   const [selectedPanel, setSelectedPanel] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [legendData, setLegendData] = useState<LegendItem[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [selectedPanels, setSelectedPanels] = useState<Set<string>>(new Set());
-  const [showGroupDetail, setShowGroupDetail] = useState(false);
-  const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
   const [showGroupManagement, setShowGroupManagement] = useState(false);
   const [modifyLayout, setModifyLayoutState] = useState(false);
   const [selectedPanelsForDeletion, setSelectedPanelsForDeletion] = useState<
     Set<string>
   >(new Set());
+  const [isLoadingLayout, setIsLoadingLayout] = useState(false);
 
   const stateRef = useRef({
     isModalOpen,
-    showGroupDetail,
-    selectedGroupData,
     showGroupManagement,
     modifyLayout,
     selectedPanelsForDeletion,
@@ -85,16 +82,12 @@ export const useSolarPlant = (
   useEffect(() => {
     stateRef.current = {
       isModalOpen,
-      showGroupDetail,
-      selectedGroupData,
       showGroupManagement,
       modifyLayout,
       selectedPanelsForDeletion,
     };
   }, [
     isModalOpen,
-    showGroupDetail,
-    selectedGroupData,
     showGroupManagement,
     modifyLayout,
     selectedPanelsForDeletion,
@@ -120,9 +113,7 @@ export const useSolarPlant = (
   useEffect(() => {
     if (selectedGroup && !groups.find((g: any) => g.id === selectedGroup)) {
       setSelectedGroup("");
-      setShowGroupDetail(false);
       setShowGroupManagement(false);
-      setSelectedGroupData(null);
       setSelectedPanels(new Set());
     }
   }, [selectedGroup, groups]);
@@ -291,19 +282,12 @@ export const useSolarPlant = (
       return;
     }
 
-    if (
-      currentStates.isModalOpen ||
-      currentStates.showGroupDetail ||
-      currentStates.selectedGroupData ||
-      currentStates.showGroupManagement
-    ) {
+    if (currentStates.isModalOpen || currentStates.showGroupManagement) {
       return;
     }
 
     setSelectedPanel(panelData);
     setIsModalOpen(true);
-    setShowGroupDetail(false);
-    setSelectedGroupData(null);
   }, []);
 
   const handleCameraUpdate = useCallback((legendData: LegendItem[]) => {
@@ -312,148 +296,37 @@ export const useSolarPlant = (
 
   const handleGroupChange = useCallback(
     (groupId: string) => {
-      setSelectedGroup(groupId);
       setIsModalOpen(false);
       setSelectedPanel(null);
 
       if (groupId) {
-        const selectedGroup = groups.find((g: any) => g.id === groupId);
-
-        if (selectedGroup) {
-          const groupPanels = selectedGroup.panels.map((panel: any) => ({
-            groupId: panel.groupId,
-            panelId: panel.id,
-            position: {
-              x: panel.position.X,
-              y: panel.position.Y,
-              z: panel.position.Z,
-            },
-            inclination: (solarData as SolarData).tilt,
-            dimensions: {
-              length: (solarData as SolarData).longitud,
-              width: (solarData as SolarData).ancho,
-            },
-          }));
-
-          setSelectedGroupData({
-            groupId: groupId,
-            allPanelsInGroup: groupPanels,
-          });
-          setShowGroupDetail(true);
-        }
+        router.push(`/${locale}/group/${groupId}`);
+        setTimeout(() => {
+          setSelectedGroup("");
+        }, 100);
       } else {
-        setShowGroupDetail(false);
-        setSelectedGroupData(null);
+        setSelectedGroup("");
       }
     },
-    [groups],
+    [router, locale],
   );
 
   const handleOpenGroupManagement = useCallback(() => {
     setShowGroupManagement(true);
-    setShowGroupDetail(false);
   }, []);
 
   const handleCloseGroupManagement = useCallback(() => {
     setShowGroupManagement(false);
-    setShowGroupDetail(true);
-
-    if (selectedGroup) {
-      const updatedGroup = groups.find((g: any) => g.id === selectedGroup);
-      if (updatedGroup && updatedGroup.panels.length > 0) {
-        const groupPanels = updatedGroup.panels.map((panel: any) => ({
-          groupId: panel.groupId,
-          panelId: panel.id,
-          position: {
-            x: panel.position.X,
-            y: panel.position.Y,
-            z: panel.position.Z,
-          },
-          inclination: (solarData as SolarData).tilt,
-          dimensions: {
-            length: (solarData as SolarData).longitud,
-            width: (solarData as SolarData).ancho,
-          },
-        }));
-
-        setSelectedGroupData({
-          groupId: selectedGroup,
-          allPanelsInGroup: groupPanels,
-        });
-      } else {
-        setShowGroupDetail(false);
-        setSelectedGroupData(null);
-        setSelectedGroup("");
-      }
-    }
-  }, [selectedGroup, groups]);
-
-  const handleGroupChanged = useCallback(() => {
-    if (selectedGroup) {
-      const updatedGroup = groups.find((g: any) => g.id === selectedGroup);
-      if (updatedGroup && updatedGroup.panels.length > 0) {
-        const groupPanels = updatedGroup.panels.map((panel: any) => ({
-          groupId: panel.groupId,
-          panelId: panel.id,
-          position: {
-            x: panel.position.X,
-            y: panel.position.Y,
-            z: panel.position.Z,
-          },
-          inclination: (solarData as SolarData).tilt,
-          dimensions: {
-            length: (solarData as SolarData).longitud,
-            width: (solarData as SolarData).ancho,
-          },
-        }));
-
-        setSelectedGroupData({
-          groupId: selectedGroup,
-          allPanelsInGroup: groupPanels,
-        });
-      } else {
-        setShowGroupDetail(false);
-        setShowGroupManagement(false);
-        setSelectedGroupData(null);
-        setSelectedGroup("");
-      }
-    }
-  }, [selectedGroup, groups]);
+  }, []);
 
   const handleOpenGroupManagementFromPanel = useCallback(
     (groupId: string) => {
       setIsModalOpen(false);
       setSelectedPanel(null);
 
-      const selectedGroup = groups.find((g: any) => g.id === groupId);
-
-      if (selectedGroup) {
-        const groupPanels = selectedGroup.panels.map((panel: any) => ({
-          groupId: panel.groupId,
-          panelId: panel.id,
-          position: {
-            x: panel.position.X,
-            y: panel.position.Y,
-            z: panel.position.Z,
-          },
-          inclination: (solarData as SolarData).tilt,
-          dimensions: {
-            length: (solarData as SolarData).longitud,
-            width: (solarData as SolarData).ancho,
-          },
-        }));
-
-        setSelectedGroupData({
-          groupId: groupId,
-          allPanelsInGroup: groupPanels,
-        });
-
-        setShowGroupDetail(false);
-        setShowGroupManagement(true);
-        setSelectedGroup(groupId);
-      }
+      router.push(`/${locale}/group/${groupId}`);
     },
-    [groups],
+    [router, locale],
   );
 
   const handlePositionChange = useCallback(
@@ -545,17 +418,6 @@ export const useSolarPlant = (
     setSelectedPanel(null);
   }, []);
 
-  const handleCloseGroupDetail = useCallback(() => {
-    setShowGroupDetail(false);
-    setSelectedGroupData(null);
-    setSelectedPanels(new Set());
-    setSelectedGroup("");
-  }, []);
-
-  const handlePanelSelectInGroup = useCallback((panelIds: Set<string>) => {
-    setSelectedPanels(panelIds);
-  }, []);
-
   const cameraPosition = useMemo(() => {
     const { parcela, agrupaciones } = solarData as SolarData;
     const centroid = parcela.reduce(
@@ -607,11 +469,10 @@ export const useSolarPlant = (
     legendData,
     selectedGroup,
     selectedPanels,
-    showGroupDetail,
-    selectedGroupData,
     showGroupManagement,
     modifyLayout,
     selectedPanelsForDeletion,
+    isLoadingLayout,
   };
 
   return {
@@ -622,7 +483,6 @@ export const useSolarPlant = (
     handleGroupChange,
     handleOpenGroupManagement,
     handleCloseGroupManagement,
-    handleGroupChanged,
     handleOpenGroupManagementFromPanel,
     handlePositionChange,
     handlePanelGroupChange,
@@ -632,8 +492,6 @@ export const useSolarPlant = (
     setModifyLayout,
 
     handleCloseModal,
-    handleCloseGroupDetail,
-    handlePanelSelectInGroup,
 
     sceneConfig,
     cameraPosition,

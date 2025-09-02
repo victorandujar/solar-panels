@@ -16,6 +16,7 @@ interface SceneData {
   viewport?: SceneViewport;
   cameraType?: "perspective" | "orthographic";
   cameraSettings?: any;
+  domRef?: React.RefObject<HTMLDivElement>;
 }
 
 export function useRegisterScene(id: string, sceneData: SceneData) {

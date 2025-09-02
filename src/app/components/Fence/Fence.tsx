@@ -35,6 +35,7 @@ const Fence: React.FC<FenceProps> = ({
     {},
     createElement("bufferGeometry" as any, {}, [
       createElement("bufferAttribute" as any, {
+        key: "position-attribute",
         attach: "attributes-position",
         args: [
           new Float32Array(fenceGeometry.flatMap((p) => [p.x, p.y, p.z])),

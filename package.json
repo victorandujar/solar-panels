@@ -10,6 +10,9 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.2",
     "@react-three/drei": "^10.6.1",
     "@react-three/fiber": "^9.3.0",
     "@use-gesture/react": "^10.3.1",
