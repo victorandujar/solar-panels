@@ -38,6 +38,7 @@ body {
   overflow-x: hidden;
   font-weight: 400;
   position: relative;
+  scroll-behavior: smooth;
 }
 
 body::before {

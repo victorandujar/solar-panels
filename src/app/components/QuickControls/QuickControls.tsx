@@ -64,7 +64,7 @@ const QuickControls: React.FC<QuickControlsProps> = ({ className = "" }) => {
 
   return (
     <div
-      className={`backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 text-black ${className} z-50`}
+      className={`backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-white 2xl:text-black ${className} z-50`}
     >
       <h3 className="text-sm font-semibold mb-3 flex items-center">
         <svg
