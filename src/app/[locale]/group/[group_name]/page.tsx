@@ -92,30 +92,30 @@ const GroupPage = () => {
     <div className="fixed inset-0 w-full h-full z-50 flex items-center justify-center">
       <div className="w-full h-full bg-black/10 backdrop-blur-sm shadow-2xl overflow-hidden flex flex-col ">
         <div className="backdrop-blur-md border border-b border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 text-blackp-4 shadow-lg text-black">
-          <div className="flex justify-between gap-10 items-end py-2 px-10">
+          <div className="flex justify-between gap-2 md:gap-4 lg:gap-10 items-end py-0.5 md:py-1 lg:py-2 px-2 md:px-4 lg:px-10">
             <Link
               href="/"
-              className="hover:text-gray-200 transition-colors p-2 rounded-full  text-sm flex items-center gap-2"
+              className="hover:text-gray-200 transition-colors p-1 md:p-2 rounded-full text-xs md:text-sm flex items-center gap-1 md:gap-2"
               title="Cerrar vista de grupo"
             >
               ← Volver
             </Link>
             <div>
-              <h2 className="text-l font-bold text-white">
+              <h2 className="text-xs md:text-sm lg:text-base 2xl:text-lg font-bold text-white">
                 Vista Detallada - Grupo {groupData.groupId}
               </h2>
-              <p className="text-sm opacity-90 mt-1 text-white">
+              <p className="text-xs opacity-90 mt-0.5 md:mt-1 text-white">
                 {groupData.allPanelsInGroup.length} paneles en este grupo
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex">
-          <div className="w-1/2 h-full relative border-r border-mainColor/50">
+        <div className="flex-1 flex flex-col lg:flex-row">
+          <div className="w-full lg:w-1/2 h-[35vh] md:h-[40vh] lg:h-full relative lg:border-r border-b lg:border-b-0 border-mainColor/50">
             <div className="absolute inset-0">
-              <div className="absolute top-4 left-4 z-10">
-                <h3 className="text-lg font-semibold text-black">
+              <div className="absolute top-1 md:top-2 lg:top-4 left-1 md:left-2 lg:left-4 z-10">
+                <h3 className="text-xs md:text-sm lg:text-base 2xl:text-lg font-semibold text-black">
                   Vista General
                 </h3>
               </div>
@@ -138,8 +138,8 @@ const GroupPage = () => {
             </div>
           </div>
 
-          <div className="w-1/2 h-full relative flex flex-col">
-            <div className="flex-1 relative">
+          <div className="w-full lg:w-1/2 h-[65vh] md:h-[60vh] lg:h-full relative flex flex-col">
+            <div className="flex-1 relative min-h-0">
               <Canvas
                 style={{ width: "100%", height: "100%" }}
                 gl={{
@@ -155,7 +155,7 @@ const GroupPage = () => {
               </Canvas>
             </div>
 
-            <div className="h-[40vh] flex-shrink-0">
+            <div className="md:h-[50vh] 2xl:h-[35vh] overflow-hidden md:mb-24 2xl:mb-0 md:overflow-y-auto">
               <GroupControls
                 state={state}
                 setRangeStart={setRangeStart}

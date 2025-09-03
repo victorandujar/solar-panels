@@ -239,11 +239,11 @@ const GroupControls: React.FC<Props> = ({
   return (
     <div
       ref={panelRef}
-      className={`p-4 2xl:text-sm md:text-xs bg-white/10 backdrop-blur-md border border-white/20 rounded-lg m-2 overflow-hidden flex flex-col transition-all duration-300`}
+      className={`p-1 md:p-2 lg:p-3 2xl:p-4 text-xs bg-white/10 backdrop-blur-md border border-white/20 rounded-lg m-0.5 md:m-1 lg:m-2 overflow-hidden flex flex-col transition-all duration-300`}
     >
-      <div className="flex justify-between items-center mb-3 flex-shrink-0">
-        <section className="flex items-center gap-5">
-          <h3 className="font-semibold text-white">
+      <div className="flex justify-between items-center mb-1 md:mb-2 flex-shrink-0">
+        <section className="flex items-center gap-2 md:gap-5">
+          <h3 className="text-sm md:text-base font-semibold text-white">
             {showManagement ? "Gestión del Grupo" : "Controles del Grupo"}
           </h3>
           <Tooltip
@@ -298,31 +298,31 @@ const GroupControls: React.FC<Props> = ({
       </div>
 
       {!showManagement ? (
-        <div className="space-y-3">
+        <div className="space-y-1 md:space-y-2">
           <div>
-            <h4 className="text-sm font-medium mb-2 text-white">
+            <h4 className="text-xs font-medium mb-0.5 md:mb-1 text-white">
               Selección por Rango
             </h4>
-            <div className="flex space-x-2 mb-2">
+            <div className="flex space-x-1 md:space-x-2 mb-1 md:mb-2">
               <input
                 type="number"
                 placeholder="ID Inicio"
                 value={state.rangeStart}
                 onChange={(e) => setRangeStart(e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
+                className="flex-1 px-1 md:px-2 py-0.5 md:py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
               />
               <input
                 type="number"
                 placeholder="ID Fin"
                 value={state.rangeEnd}
                 onChange={(e) => setRangeEnd(e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
+                className="flex-1 px-1 md:px-2 py-0.5 md:py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
               />
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={handleRangeSelect}
-                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-2 md:px-3 py-0.5 md:py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               >
                 Seleccionar Rango
               </button>
@@ -389,26 +389,26 @@ const GroupControls: React.FC<Props> = ({
         >
           <div>
             <h4 className="text-sm font-medium mb-2 text-white">Selección</h4>
-            <div className="flex space-x-2 mb-2">
+            <div className="flex space-x-1 md:space-x-2 mb-1 md:mb-2">
               <input
                 type="number"
                 placeholder="ID Inicio"
                 value={state.rangeStart}
                 onChange={(e) => setRangeStart(e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
+                className="flex-1 px-1 md:px-2 py-0.5 md:py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
               />
               <input
                 type="number"
                 placeholder="ID Fin"
                 value={state.rangeEnd}
                 onChange={(e) => setRangeEnd(e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
+                className="flex-1 px-1 md:px-2 py-0.5 md:py-1 text-xs bg-white/20 border border-white/30 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-white/70"
               />
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={handleRangeSelect}
-                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-2 md:px-3 py-0.5 md:py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               >
                 Seleccionar Rango
               </button>
