@@ -12,7 +12,7 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
 
   return (
     <div
-      className={`backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 text-black ${className}`}
+      className={`backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-white 2xl:text-black ${className}`}
     >
       <h3 className="text-sm font-semibold mb-3 flex items-center">
         <svg
@@ -33,7 +33,9 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
 
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span className="text-xs text-gray-600">Total Paneles:</span>
+          <span className="text-xs md:text-gray-300 2xl:text-gray-600">
+            Total Paneles:
+          </span>
           <span className="text-xs font-bold">{stats.totalPanels}</span>
         </div>
 
@@ -52,7 +54,9 @@ const PanelStats: React.FC<PanelStatsProps> = ({ className = "" }) => {
         </div>
 
         <div className="flex justify-between">
-          <span className="text-xs text-gray-600">Eficiencia:</span>
+          <span className="text-xs md:text-gray-300 2xl:text-gray-600">
+            Eficiencia:
+          </span>
           <span className="text-xs font-bold">
             {stats.panelActivePercentage.toFixed(1)}%
           </span>

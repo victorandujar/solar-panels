@@ -42,7 +42,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
         • Selecciona un grupo para ver detalles en el popup
       </div>
 
-      <div className="space-y-2 md:h-48 2xl:h-[450px] overflow-y-auto">
+      <div className="space-y-2 md:h-80 2xl:h-[450px] overflow-y-auto">
         {legendData.map((item) => (
           <div
             key={item.key}
