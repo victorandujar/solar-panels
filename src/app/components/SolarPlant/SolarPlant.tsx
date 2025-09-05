@@ -97,7 +97,7 @@ const SolarPanelLayout: React.FC = () => {
       <div
         ref={rootRef}
         className="h-screen overflow-hidden relative transition-all duration-300 font-mono w-full"
-      ></div>
+      />
 
       {state.isLoadingLayout && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -112,7 +112,7 @@ const SolarPanelLayout: React.FC = () => {
         </div>
       )}
 
-      <div className="absolute top-24 left-4 z-20 w-full">
+      <div className="absolute 2xl:top-10 md:top-5 left-4 z-20 w-full">
         <div className="flex md:justify-between 2xl:justify-start gap-4 w-full pr-8">
           <GroupSelector
             legendData={state.legendData}

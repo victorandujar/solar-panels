@@ -89,9 +89,9 @@ const GroupPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full z-50 flex items-center justify-center">
+    <div className="fixed inset-0 w-full h-full  flex items-center justify-center pt-20">
       <div className="w-full h-full bg-black/10 backdrop-blur-sm shadow-2xl overflow-hidden flex flex-col ">
-        <div className="backdrop-blur-md border border-b border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 text-blackp-4 shadow-lg text-black">
+        {/* <div className="backdrop-blur-md border border-b border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 text-blackp-4 shadow-lg text-black">
           <div className="flex justify-between gap-2 md:gap-4 lg:gap-10 items-end py-0.5 md:py-1 lg:py-2 px-2 md:px-4 lg:px-10">
             <Link
               href="/"
@@ -100,16 +100,9 @@ const GroupPage = () => {
             >
               ← Volver
             </Link>
-            <div>
-              <h2 className="text-xs md:text-sm lg:text-base 2xl:text-lg font-bold text-white">
-                Vista Detallada - Grupo {groupData.groupId}
-              </h2>
-              <p className="text-xs opacity-90 mt-0.5 md:mt-1 text-white">
-                {groupData.allPanelsInGroup.length} paneles en este grupo
-              </p>
-            </div>
+           
           </div>
-        </div>
+        </div> */}
 
         <div className="flex-1 flex flex-col lg:flex-row">
           <div className="w-full lg:w-1/2 h-[35vh] md:h-[40vh] lg:h-full relative lg:border-r border-b lg:border-b-0 border-mainColor/50">
@@ -139,6 +132,14 @@ const GroupPage = () => {
           </div>
 
           <div className="w-full lg:w-1/2 h-[65vh] md:h-[60vh] lg:h-full relative flex flex-col">
+            <div className="absolute top-2 right-8">
+              <h2 className=" text-xs md:text-sm lg:text-base 2xl:text-lg font-bold text-white">
+                Vista Detallada - Grupo {groupData.groupId}
+              </h2>
+              <p className="text-xs opacity-90 mt-0.5 md:mt-1 text-white">
+                {groupData.allPanelsInGroup.length} paneles en este grupo
+              </p>
+            </div>
             <div className="flex-1 relative min-h-0">
               <Canvas
                 style={{ width: "100%", height: "100%" }}
@@ -155,7 +156,7 @@ const GroupPage = () => {
               </Canvas>
             </div>
 
-            <div className="md:h-[50vh] 2xl:h-[35vh] overflow-hidden md:mb-24 2xl:mb-0 md:overflow-y-auto">
+            <div className="md:h-[45vh] 2xl:h-[35vh] mb-1 overflow-hidden md:overflow-y-auto">
               <GroupControls
                 state={state}
                 setRangeStart={setRangeStart}
