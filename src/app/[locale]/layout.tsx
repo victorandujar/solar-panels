@@ -9,6 +9,7 @@ import ThreeCanvas from "../components/ThreeCanvas/ThreeCanvas";
 import { SceneProvider } from "../context/SceneContext";
 
 import { Audiowide, Montserrat } from "next/font/google";
+import Layout from "../components/Layout/Layout";
 
 const audiowide = Audiowide({
   subsets: ["latin"],
@@ -42,12 +43,15 @@ export default async function RootLayout({
       <body
         className={`antialiased ${montserrat.variable} ${audiowide.variable}`}
       >
-        <div id="root-container" className="relative w-full h-screen">
+        <div
+          id="root-container"
+          className="relative w-full h-screen overflow-hidden"
+        >
           <SceneProvider>
             <ThreeCanvas />
             <EnergyBackground />
             <NextIntlClientProvider locale={locale} messages={messages}>
-              {children}
+              <Layout>{children}</Layout>
             </NextIntlClientProvider>
           </SceneProvider>
         </div>

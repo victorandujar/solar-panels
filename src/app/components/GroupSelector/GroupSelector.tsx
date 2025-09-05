@@ -39,7 +39,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
       </h3>
 
       <div className="text-xs text-gray-600 mb-2">
-        • Selecciona un grupo para ver detalles en el popup
+        • Selecciona un grupo para ver los detalles
       </div>
 
       <div className="space-y-2 md:h-80 2xl:h-[450px] overflow-y-auto">
