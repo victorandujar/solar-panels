@@ -1,2 +1,4 @@
+# Disable LFS for chunk files - they are small enough for regular Git
+src/utils/terrain-chunks/* -filter -diff -merge -text
 *.chunk* !text !filter !merge !diff
 chunk_* !text !filter !merge !diff
