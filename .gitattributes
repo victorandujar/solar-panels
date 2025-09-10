@@ -1,3 +1,2 @@
-*.txt filter=lfs diff=lfs merge=lfs -text
 *.chunk* !text !filter !merge !diff
 chunk_* !text !filter !merge !diff

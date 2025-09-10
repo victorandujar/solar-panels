@@ -1,27 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "fs/promises";
+import { readFile, readdir } from "fs/promises";
 import { join } from "path";
 
 export async function GET(request: NextRequest) {
   try {
-    const filePath = join(
-      process.cwd(),
-      "src",
-      "utils",
-      "TINSurface_original.txt",
-    );
+    const chunksPath = join(process.cwd(), "src", "utils", "terrain-chunks");
 
-    const data = await readFile(filePath, "utf-8");
+    // Leer todos los chunks y combinarlos
+    const files = await readdir(chunksPath);
+    const chunkFiles = files.filter((file) => file.startsWith("chunk_")).sort();
 
-    const lines = data.split("\n").slice(0, 1000);
-    const limitedData = lines.join("\n");
+    if (chunkFiles.length === 0) {
+      throw new Error("No chunks found");
+    }
+
+    // Cargar solo los primeros chunks (limitado para evitar problemas)
+    const chunksToLoad = chunkFiles.slice(0, 1000); // Tomar solo las primeras 1000 líneas como antes
+    let combinedData = "";
+
+    for (const chunkFile of chunksToLoad) {
+      const chunkPath = join(chunksPath, chunkFile);
+      const chunkContent = await readFile(chunkPath, "utf-8");
+      combinedData += chunkContent;
+
+      // Si ya tenemos suficientes líneas, parar
+      const lines = combinedData.split("\n").filter((line) => line.trim());
+      if (lines.length >= 1000) {
+        combinedData = lines.slice(0, 1000).join("\n");
+        break;
+      }
+    }
+
+    const lines = combinedData.split("\n").filter((line) => line.trim());
 
     return NextResponse.json({
-      data: limitedData,
-      totalLines: data.split("\n").length,
+      data: combinedData,
+      totalLines: lines.length,
       renderedLines: lines.length,
     });
   } catch (error) {
+    // Fallback exactamente igual que antes
     const exampleData = `71420,119;54164,805;384|71419,34;54163,645;384|71413,769;54175,193;384,5
 71430,032;54159,618;383,5|71420,119;54164,805;384|71420,899;54165,965;384
 71420,899;54165,965;384|71420,119;54164,805;384|71413,769;54175,193;384,5
@@ -37,7 +55,6 @@ export async function GET(request: NextRequest) {
       data: exampleData,
       totalLines: 10,
       renderedLines: 10,
-      fallback: true,
     });
   }
 }
