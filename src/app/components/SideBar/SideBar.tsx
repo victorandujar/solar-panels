@@ -10,13 +10,9 @@ import { headerSections } from "@/app/utils/headerSections";
 
 interface Props {
   handleMenuOpen: () => void;
-  handleMenuSectionClick: (value: string) => void;
 }
 
-const SideBar = ({
-  handleMenuOpen,
-  handleMenuSectionClick,
-}: Props): React.ReactElement => {
+const SideBar = ({ handleMenuOpen }: Props): React.ReactElement => {
   const path = usePathname();
   const locale = useLocale();
 
@@ -66,10 +62,7 @@ const SideBar = ({
                 } hover:text-gray-300`}
                 key={section.id}
               >
-                <button
-                  onClick={() => handleMenuSectionClick(section.name)}
-                  className="flex items-center justify-between w-full tracking-wide text-l font-generalSans px-4"
-                >
+                <button className="flex items-center justify-between w-full tracking-wide text-l font-generalSans px-4">
                   {section.link ? (
                     <Link
                       href={section.link}

@@ -24,20 +24,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
-  const handleMenuSectionClick = (section: string) => {
-    router.push(section);
-  };
-
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <Header handleMenuOpen={handleMenuOpen} />
       <AnimatePresence>
         {isSidebarVisible && (
-          <SideBar
-            key="sidebar"
-            handleMenuOpen={handleMenuOpen}
-            handleMenuSectionClick={handleMenuSectionClick}
-          />
+          <SideBar key="sidebar" handleMenuOpen={handleMenuOpen} />
         )}
       </AnimatePresence>
       <div className="flex justify-center h-full">{children}</div>

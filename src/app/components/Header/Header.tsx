@@ -20,7 +20,7 @@ const Header: React.FC<Props> = ({ handleMenuOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-transparent backdrop-blur-lg flex items-center justify-between p-4 pr-8 mobile:w-full">
+    <header className="sticky top-0 z-50 bg-transparent backdrop-blur-sm flex items-center justify-between p-4 pr-8 mobile:w-full">
       <button onClick={handleLogoClick}>
         <h1 className="text-5xl font-bold  text-black font-audiowide">
           Solar Panels

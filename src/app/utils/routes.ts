@@ -1,6 +1,6 @@
 const routes = {
   home: "/",
-  pvcivil: "/pvcivil",
+  pvcivil: "/pv-civil",
   group: "/group",
 };
 
