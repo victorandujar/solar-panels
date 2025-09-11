@@ -495,9 +495,14 @@ const GroupControls: React.FC<Props> = ({
                 <button
                   onClick={() => {
                     if (availableTargetGroups.length === 0) {
-                      alert(
-                        "No hay otros grupos disponibles para mover paneles",
-                      );
+                      showNotification({
+                        title: "No hay grupos disponibles",
+                        message:
+                          "No hay otros grupos disponibles para mover paneles. Crea primero un grupo destino.",
+                        variant: "warning",
+                        autoClose: true,
+                        autoCloseDelay: 4000,
+                      });
                       return;
                     }
                     setShowMoveToGroup(!showMoveToGroup);

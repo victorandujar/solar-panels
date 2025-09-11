@@ -72,21 +72,10 @@ const SolarPanel: React.FC<SolarPanelProps> = ({
         dimensions,
       };
 
-      if (modifyLayout) {
-        onClick(panelData, event.nativeEvent);
-      } else {
-        onClick(panelData);
-      }
+      // Siempre pasar el evento para que se pueda obtener la posición exacta del click
+      onClick(panelData, event);
     },
-    [
-      groupId,
-      panelId,
-      position,
-      inclination,
-      dimensions,
-      onClick,
-      modifyLayout,
-    ],
+    [groupId, panelId, position, inclination, dimensions, onClick],
   );
 
   return createElement(

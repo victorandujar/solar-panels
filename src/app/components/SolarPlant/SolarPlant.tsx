@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useRef, useMemo, useEffect } from "react";
+import React, {
+  useRef,
+  useMemo,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+import * as THREE from "three";
 import { PerspectiveCamera } from "@react-three/drei";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
@@ -8,14 +15,24 @@ import GroupSelector from "../GroupSelector/GroupSelector";
 import PanelStats from "../PanelStats/PanelStats";
 import QuickControls from "../QuickControls/QuickControls";
 import SolarPlantScene from "../SolarPlantScene/SolarPlantScene";
+import VialManager from "../VialManager/VialManagerSimple";
 import NotificationDialog from "../NotificationDialog/NotificationDialog";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
 import { useRegisterScene } from "../../hooks/useRegisterScene";
+import { useDialog } from "../../hooks/useDialog";
 import {
   useSolarPanelStore,
   type SolarPanelState,
 } from "../../../store/useStore";
 import { useSolarPlant } from "../../hooks/useSolarPlant";
-import { FaEdit, FaPlusSquare, FaTrash, FaTimes } from "react-icons/fa";
+import {
+  FaEdit,
+  FaPlusSquare,
+  FaTrash,
+  FaTimes,
+  FaRoad,
+  FaTools,
+} from "react-icons/fa";
 
 const SolarPanelLayout: React.FC = () => {
   const {
@@ -36,6 +53,92 @@ const SolarPanelLayout: React.FC = () => {
     notificationDialog,
     hideNotification,
   } = useSolarPlant();
+
+  const {
+    showNotification: showNotificationDialog,
+    showConfirm,
+    confirmDialog,
+    hideConfirm,
+  } = useDialog();
+
+  const showNotification = useCallback(
+    (
+      title: string,
+      message: string,
+      variant?: "success" | "warning" | "info",
+    ) => {
+      showNotificationDialog({
+        title,
+        message,
+        variant,
+        autoClose: true,
+        autoCloseDelay: 4000,
+      });
+    },
+    [showNotificationDialog],
+  );
+
+  const showConfirmDialog = useCallback(
+    async (
+      title: string,
+      message: string,
+      variant?: "default" | "danger" | "warning" | "success",
+    ): Promise<boolean> => {
+      return showConfirm({
+        title,
+        message,
+        variant: variant || "danger",
+        confirmText: "Confirmar",
+        cancelText: "Cancelar",
+      });
+    },
+    [showConfirm],
+  );
+
+  const [isCreatingVial, setIsCreatingVial] = useState(false);
+  const [isTrenchMode, setIsTrenchMode] = useState(false);
+  const [vialClickHandler, setVialClickHandler] = useState<
+    ((point: THREE.Vector3) => void) | null
+  >(null);
+
+  const handlePanelClickWithVial = useCallback(
+    (panelData: any, event?: any) => {
+      if ((isCreatingVial || isTrenchMode) && vialClickHandler) {
+        let point: THREE.Vector3;
+
+        if (event?.point) {
+          point = new THREE.Vector3(
+            event.point.x,
+            event.point.y,
+            event.point.z,
+          );
+        } else if (panelData?.position) {
+          const pos = panelData.position;
+          if (Array.isArray(pos)) {
+            point = new THREE.Vector3(pos[0], pos[1], pos[2]);
+          } else {
+            point = new THREE.Vector3(pos.x, pos.y, pos.z);
+          }
+        } else {
+          return;
+        }
+
+        if (vialClickHandler) {
+          vialClickHandler(point);
+        }
+      } else if (!isCreatingVial && !isTrenchMode) {
+        handlePanelClick(panelData, event);
+      } else {
+      }
+    },
+    [isCreatingVial, isTrenchMode, vialClickHandler, handlePanelClick],
+  );
+  const [trenchParams, setTrenchParams] = useState({
+    depth: 1.5,
+    width: 2.0,
+    length: 10.0,
+    direction: 0,
+  });
 
   const initializePanels = useSolarPanelStore(
     (storeState: SolarPanelState) => storeState.initializePanels,
@@ -61,11 +164,24 @@ const SolarPanelLayout: React.FC = () => {
           selectedGroup={state.selectedGroup}
           selectedPanels={state.selectedPanels}
           selectedPanelsForDeletion={state.selectedPanelsForDeletion}
-          onPanelClick={handlePanelClick}
+          onPanelClick={handlePanelClickWithVial}
           onCameraUpdate={handleCameraUpdate}
           modifyLayout={state.modifyLayout}
           onPositionChange={handlePositionChange}
           onGroupChange={handlePanelGroupChange}
+          isCreatingVials={isCreatingVial || isTrenchMode}
+        />
+        <VialManager
+          isCreatingVial={isCreatingVial}
+          isTrenchMode={isTrenchMode}
+          trenchParams={trenchParams}
+          onPanelVialClick={setVialClickHandler}
+          showNotification={showNotification}
+          showConfirm={showConfirmDialog}
+          onVialCreated={() => {
+            setIsCreatingVial(false);
+            setIsTrenchMode(false);
+          }}
         />
       </>
     ),
@@ -74,11 +190,16 @@ const SolarPanelLayout: React.FC = () => {
       state.selectedGroup,
       state.selectedPanels,
       state.selectedPanelsForDeletion,
-      handlePanelClick,
+      handlePanelClickWithVial,
       handleCameraUpdate,
       state.modifyLayout,
       handlePositionChange,
       handlePanelGroupChange,
+      isCreatingVial,
+      isTrenchMode,
+      trenchParams,
+      showNotification,
+      showConfirmDialog,
     ],
   );
 
@@ -185,6 +306,106 @@ const SolarPanelLayout: React.FC = () => {
                 </section>
               )}
             </section>
+
+            <section className="md:fixed md:top-[35%] md:left-[27%] z-20 w-full 2xl:relative 2xl:top-0 2xl:left-0">
+              <div className="flex flex-col gap-2 w-60 backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-white 2xl:text-black ${className} z-50">
+                <h3 className="text-sm font-medium text-black mb-2 flex items-center gap-2">
+                  <FaRoad /> Viales y Zanjas
+                </h3>
+
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setIsCreatingVial(!isCreatingVial);
+                      setIsTrenchMode(false);
+                    }}
+                    className={`flex items-center justify-center gap-2 text-sm p-2 rounded-lg transition-colors ${
+                      isCreatingVial
+                        ? "bg-orange-600/70 hover:bg-orange-500 text-white"
+                        : "bg-orange-500/70 hover:bg-orange-600 text-white"
+                    }`}
+                  >
+                    <FaRoad />
+                    {isCreatingVial ? "Cancelar Vial" : "Crear Vial"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsTrenchMode(!isTrenchMode);
+                      setIsCreatingVial(false);
+                    }}
+                    className={`flex items-center justify-center gap-2 text-sm p-2 rounded-lg transition-colors ${
+                      isTrenchMode
+                        ? "bg-amber-600/70 hover:bg-amber-500 text-white"
+                        : "bg-amber-500/70 hover:bg-amber-600 text-white"
+                    }`}
+                  >
+                    <FaTools />
+                    {isTrenchMode ? "Cancelar Zanja" : "Crear Zanja"}
+                  </button>
+
+                  {isTrenchMode && (
+                    <div className="mt-2 p-2 bg-black/30 rounded text-white text-xs space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label>Profundidad:</label>
+                        <input
+                          type="number"
+                          value={trenchParams.depth}
+                          onChange={(e) =>
+                            setTrenchParams((prev) => ({
+                              ...prev,
+                              depth: parseFloat(e.target.value) || 1.5,
+                            }))
+                          }
+                          className="w-16 px-1 py-0.5 bg-black/50 rounded text-center"
+                          step="0.1"
+                          min="0.1"
+                          max="5"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <label>Anchura:</label>
+                        <input
+                          type="number"
+                          value={trenchParams.width}
+                          onChange={(e) =>
+                            setTrenchParams((prev) => ({
+                              ...prev,
+                              width: parseFloat(e.target.value) || 2.0,
+                            }))
+                          }
+                          className="w-16 px-1 py-0.5 bg-black/50 rounded text-center"
+                          step="0.1"
+                          min="0.5"
+                          max="10"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instrucciones */}
+                  {(isCreatingVial || isTrenchMode) && (
+                    <div className="text-xs text-white bg-black/30 p-2 rounded">
+                      <p className="font-medium mb-1">Instrucciones:</p>
+                      <p>1. Haz clic para marcar el punto inicial</p>
+                      <p>2. Haz clic para marcar el punto final</p>
+                      {isCreatingVial && (
+                        <p className="text-orange-300 mt-1">
+                          ⚠️ Los viales eliminarán automáticamente todos los
+                          paneles en su trayecto
+                        </p>
+                      )}
+                      {isTrenchMode && (
+                        <p className="text-amber-300 mt-1">
+                          ⚠️ Las zanjas solo se pueden crear en espacios sin
+                          paneles
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -203,6 +424,7 @@ const SolarPanelLayout: React.FC = () => {
       </Modal>
 
       <NotificationDialog {...notificationDialog} onClose={hideNotification} />
+      <ConfirmDialog {...confirmDialog} onClose={hideConfirm} />
     </>
   );
 };

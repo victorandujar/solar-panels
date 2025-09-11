@@ -25,9 +25,26 @@ export interface PanelGroup {
   color?: string;
 }
 
+// Types para los viales
+export interface Vial {
+  id: string;
+  name: string;
+  start: Point;
+  end: Point;
+  color: string;
+  lineWidth?: number;
+  animated?: boolean;
+  opacity?: number;
+  active: boolean;
+  width?: number;
+  depth?: number;
+  isTraench?: boolean;
+}
+
 export interface SolarPanelState {
   groups: PanelGroup[];
   panels: Panel[];
+  vials: Vial[];
 
   disablePanels: (ids: string[]) => void;
   enablePanel: (id: string) => void;
@@ -51,6 +68,37 @@ export interface SolarPanelState {
   updateGroupName: (groupId: string, name: string) => void;
   updateGroupColor: (groupId: string, color: string) => void;
   updatePanelPosition: (panelId: string, position: Point) => void;
+
+  addVial: (
+    start: Point,
+    end: Point,
+    name: string,
+    color: string,
+    options?: {
+      depth?: number;
+      width?: number;
+      isTraench?: boolean;
+      lineWidth?: number;
+      animated?: boolean;
+      opacity?: number;
+    },
+  ) => string;
+  deleteVial: (vialId: string) => void;
+  addTrench: (
+    start: Point,
+    end: Point,
+    name: string,
+    color: string,
+    depth: number,
+    width: number,
+  ) => string;
+  deletePanelsInArea: (start: Point, end: Point, width: number) => Panel[];
+  permanentlyDeletePanelsInArea: (
+    start: Point,
+    end: Point,
+    width: number,
+  ) => Panel[];
+  checkPanelsInArea: (start: Point, end: Point, width: number) => boolean;
 }
 
 const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
@@ -121,6 +169,7 @@ const generateInitialPanels = (): { groups: PanelGroup[]; panels: Panel[] } => {
 export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
   groups: [],
   panels: [],
+  vials: [],
 
   initializePanels: () => {
     const { groups, panels } = generateInitialPanels();
@@ -633,6 +682,214 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
       };
     });
   },
+
+  addVial: (
+    start: Point,
+    end: Point,
+    name: string,
+    color: string,
+    options = {},
+  ) => {
+    const {
+      depth = 0,
+      width = 3.0,
+      isTraench = false,
+      lineWidth = 2,
+      animated = false,
+      opacity = 1.0,
+    } = options;
+
+    const vialId = `vial-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const newVial: Vial = {
+      id: vialId,
+      name,
+      start,
+      end,
+      color,
+      lineWidth,
+      animated,
+      opacity,
+      active: true,
+      width,
+      depth,
+      isTraench,
+    };
+
+    set((state) => ({
+      ...state,
+      vials: [...state.vials, newVial],
+    }));
+
+    return vialId;
+  },
+
+  deleteVial: (vialId: string) => {
+    set((state) => ({
+      ...state,
+      vials: state.vials.filter((vial) => vial.id !== vialId),
+    }));
+  },
+
+  addTrench: (
+    start: Point,
+    end: Point,
+    name: string,
+    color: string,
+    depth: number,
+    width: number,
+  ) => {
+    return get().addVial(start, end, name, color, {
+      depth,
+      width,
+      isTraench: true,
+      opacity: 0.8,
+    });
+  },
+
+  deletePanelsInArea: (start: Point, end: Point, width: number) => {
+    const state = get();
+    const panelsToDelete: Panel[] = [];
+
+    const dx = end.X - start.X;
+    const dy = end.Y - start.Y;
+    const lineLength = Math.sqrt(dx * dx + dy * dy);
+
+    if (lineLength === 0) {
+      return [];
+    }
+
+    const ux = dx / lineLength;
+    const uy = dy / lineLength;
+
+    const px = -uy;
+    const py = ux;
+
+    let checkedPanels = 0;
+    state.panels.forEach((panel) => {
+      checkedPanels++;
+
+      const toPanel = {
+        x: panel.position.X - start.X,
+        y: panel.position.Y - start.Y,
+      };
+
+      const projection = toPanel.x * ux + toPanel.y * uy;
+
+      if (projection >= 0 && projection <= lineLength) {
+        const perpDistance = Math.abs(toPanel.x * px + toPanel.y * py);
+
+        if (perpDistance <= width / 2) {
+          panelsToDelete.push(panel);
+        }
+      }
+    });
+
+    if (panelsToDelete.length > 0) {
+      const panelIds = panelsToDelete.map((p) => p.id);
+      get().deletePanels(panelIds);
+    }
+
+    return panelsToDelete;
+  },
+
+  permanentlyDeletePanelsInArea: (start: Point, end: Point, width: number) => {
+    const state = get();
+    const panelsToDelete: Panel[] = [];
+
+    const dx = end.X - start.X;
+    const dy = end.Y - start.Y;
+    const lineLength = Math.sqrt(dx * dx + dy * dy);
+
+    if (lineLength === 0) {
+      return [];
+    }
+
+    const ux = dx / lineLength;
+    const uy = dy / lineLength;
+
+    const px = -uy;
+    const py = ux;
+
+    const smallExtension = lineLength * 0.05;
+    const extendedLength = lineLength + smallExtension;
+
+    state.panels.forEach((panel) => {
+      const toPanel = {
+        x: panel.position.X - start.X,
+        y: panel.position.Y - start.Y,
+      };
+
+      const projection = toPanel.x * ux + toPanel.y * uy;
+
+      const perpDistance = Math.abs(toPanel.x * px + toPanel.y * py);
+
+      if (
+        projection >= -smallExtension / 2 &&
+        projection <= extendedLength &&
+        perpDistance <= width / 2
+      ) {
+        panelsToDelete.push(panel);
+      }
+    });
+
+    if (panelsToDelete.length > 0) {
+      const panelIdsToDelete = panelsToDelete.map((p) => p.id);
+
+      const updatedGroups = state.groups.map((group) => ({
+        ...group,
+        panels: group.panels.filter(
+          (panel) => !panelIdsToDelete.includes(panel.id),
+        ),
+      }));
+
+      const updatedPanels = state.panels.filter(
+        (panel) => !panelIdsToDelete.includes(panel.id),
+      );
+
+      set({
+        groups: updatedGroups,
+        panels: updatedPanels,
+      });
+    }
+
+    return panelsToDelete;
+  },
+
+  checkPanelsInArea: (start: Point, end: Point, width: number) => {
+    const state = get();
+
+    const dx = end.X - start.X;
+    const dy = end.Y - start.Y;
+    const lineLength = Math.sqrt(dx * dx + dy * dy);
+
+    if (lineLength === 0) return false;
+
+    const ux = dx / lineLength;
+    const uy = dy / lineLength;
+
+    const px = -uy;
+    const py = ux;
+
+    return state.panels.some((panel) => {
+      if (!panel.active) return false;
+
+      const toPanel = {
+        x: panel.position.X - start.X,
+        y: panel.position.Y - start.Y,
+      };
+
+      const projection = toPanel.x * ux + toPanel.y * uy;
+
+      if (projection >= 0 && projection <= lineLength) {
+        const perpDistance = Math.abs(toPanel.x * px + toPanel.y * py);
+
+        return perpDistance <= width / 2;
+      }
+
+      return false;
+    });
+  },
 }));
 
 export const usePanels = () => {
@@ -742,5 +999,21 @@ export const usePanelStats = () => {
 export const useGroup = (groupId: string) => {
   return useSolarPanelStore((state) =>
     state.groups.find((g) => g.id === groupId),
+  );
+};
+
+export const useVials = () => {
+  return useSolarPanelStore((state) => state.vials);
+};
+
+export const useActiveVials = () => {
+  return useSolarPanelStore((state) =>
+    state.vials.filter((vial) => vial.active),
+  );
+};
+
+export const useVial = (vialId: string) => {
+  return useSolarPanelStore((state) =>
+    state.vials.find((v) => v.id === vialId),
   );
 };

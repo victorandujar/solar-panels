@@ -27,6 +27,7 @@ interface SolarPlantSceneProps {
     newPosition: [number, number, number],
   ) => void;
   onGroupChange?: (panelId: string, newGroupId: string) => void;
+  isCreatingVials?: boolean;
 }
 
 const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
@@ -38,6 +39,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   modifyLayout,
   onPositionChange,
   onGroupChange,
+  isCreatingVials = false,
 }) => {
   const { agrupaciones, longitud, ancho, parcela, tilt } =
     solarData as SolarData;
@@ -158,7 +160,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       <DynamicControls
         centroid={centroid}
         maxDistance={maxDistance}
-        modifyLayout={modifyLayout}
+        modifyLayout={modifyLayout || isCreatingVials}
       />
     </>
   );
