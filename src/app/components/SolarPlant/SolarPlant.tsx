@@ -235,15 +235,18 @@ const SolarPanelLayout: React.FC = () => {
 
       <div className="absolute 2xl:top-10 md:top-5 left-4 z-20 w-full">
         <div className="flex md:justify-between 2xl:justify-start gap-4 w-full pr-8">
-          <GroupSelector
-            legendData={state.legendData}
-            selectedGroup={state.selectedGroup}
-            onGroupChange={handleGroupChange}
-          />
-
+          {!state.modifyLayout && (
+            <GroupSelector
+              legendData={state.legendData}
+              selectedGroup={state.selectedGroup}
+              onGroupChange={handleGroupChange}
+            />
+          )}
           <div className="flex flex-col gap-4">
-            <QuickControls className="md:w-72 2xl:w-full" />
-            <PanelStats className="w-72 2xl:w-60" />
+            {!state.modifyLayout && (
+              <QuickControls className="md:w-72 2xl:w-full" />
+            )}
+            {!state.modifyLayout && <PanelStats className="w-72 2xl:w-60" />}
             <section className="md:fixed md:top-[16%] md:left-[27%] z-20 w-full 2xl:relative 2xl:top-0 2xl:left-0">
               <button
                 onClick={() => setModifyLayout(!state.modifyLayout)}
@@ -307,105 +310,107 @@ const SolarPanelLayout: React.FC = () => {
               )}
             </section>
 
-            <section className="md:fixed md:top-[35%] md:left-[27%] z-20 w-full 2xl:relative 2xl:top-0 2xl:left-0">
-              <div className="flex flex-col gap-2 w-60 backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-white 2xl:text-black ${className} z-50">
-                <h3 className="text-sm font-medium text-black mb-2 flex items-center gap-2">
-                  <FaRoad /> Viales y Zanjas
-                </h3>
+            {!state.modifyLayout && (
+              <section className="md:fixed md:top-[35%] md:left-[27%] z-20 w-full 2xl:relative 2xl:top-0 2xl:left-0">
+                <div className="flex flex-col gap-2 w-60 backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-white 2xl:text-black ${className} z-50">
+                  <h3 className="text-sm font-medium text-black mb-2 flex items-center gap-2">
+                    <FaRoad /> Viales y Zanjas
+                  </h3>
 
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => {
-                      setIsCreatingVial(!isCreatingVial);
-                      setIsTrenchMode(false);
-                    }}
-                    className={`flex items-center justify-center gap-2 text-sm p-2 rounded-lg transition-colors ${
-                      isCreatingVial
-                        ? "bg-orange-600/70 hover:bg-orange-500 text-white"
-                        : "bg-orange-500/70 hover:bg-orange-600 text-white"
-                    }`}
-                  >
-                    <FaRoad />
-                    {isCreatingVial ? "Cancelar Vial" : "Crear Vial"}
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => {
+                        setIsCreatingVial(!isCreatingVial);
+                        setIsTrenchMode(false);
+                      }}
+                      className={`flex items-center justify-center gap-2 text-sm p-2 rounded-lg transition-colors ${
+                        isCreatingVial
+                          ? "bg-orange-600/70 hover:bg-orange-500 text-white"
+                          : "bg-orange-500/70 hover:bg-orange-600 text-white"
+                      }`}
+                    >
+                      <FaRoad />
+                      {isCreatingVial ? "Cancelar Vial" : "Crear Vial"}
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      setIsTrenchMode(!isTrenchMode);
-                      setIsCreatingVial(false);
-                    }}
-                    className={`flex items-center justify-center gap-2 text-sm p-2 rounded-lg transition-colors ${
-                      isTrenchMode
-                        ? "bg-amber-600/70 hover:bg-amber-500 text-white"
-                        : "bg-amber-500/70 hover:bg-amber-600 text-white"
-                    }`}
-                  >
-                    <FaTools />
-                    {isTrenchMode ? "Cancelar Zanja" : "Crear Zanja"}
-                  </button>
+                    <button
+                      onClick={() => {
+                        setIsTrenchMode(!isTrenchMode);
+                        setIsCreatingVial(false);
+                      }}
+                      className={`flex items-center justify-center gap-2 text-sm p-2 rounded-lg transition-colors ${
+                        isTrenchMode
+                          ? "bg-amber-600/70 hover:bg-amber-500 text-white"
+                          : "bg-amber-500/70 hover:bg-amber-600 text-white"
+                      }`}
+                    >
+                      <FaTools />
+                      {isTrenchMode ? "Cancelar Zanja" : "Crear Zanja"}
+                    </button>
 
-                  {isTrenchMode && (
-                    <div className="mt-2 p-2 bg-black/30 rounded text-white text-xs space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label>Profundidad:</label>
-                        <input
-                          type="number"
-                          value={trenchParams.depth}
-                          onChange={(e) =>
-                            setTrenchParams((prev) => ({
-                              ...prev,
-                              depth: parseFloat(e.target.value) || 1.5,
-                            }))
-                          }
-                          className="w-16 px-1 py-0.5 bg-black/50 rounded text-center"
-                          step="0.1"
-                          min="0.1"
-                          max="5"
-                        />
+                    {isTrenchMode && (
+                      <div className="mt-2 p-2 bg-black/30 rounded text-white text-xs space-y-2">
+                        <div className="flex justify-between items-center">
+                          <label>Profundidad:</label>
+                          <input
+                            type="number"
+                            value={trenchParams.depth}
+                            onChange={(e) =>
+                              setTrenchParams((prev) => ({
+                                ...prev,
+                                depth: parseFloat(e.target.value) || 1.5,
+                              }))
+                            }
+                            className="w-16 px-1 py-0.5 bg-black/50 rounded text-center"
+                            step="0.1"
+                            min="0.1"
+                            max="5"
+                          />
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <label>Anchura:</label>
+                          <input
+                            type="number"
+                            value={trenchParams.width}
+                            onChange={(e) =>
+                              setTrenchParams((prev) => ({
+                                ...prev,
+                                width: parseFloat(e.target.value) || 2.0,
+                              }))
+                            }
+                            className="w-16 px-1 py-0.5 bg-black/50 rounded text-center"
+                            step="0.1"
+                            min="0.5"
+                            max="10"
+                          />
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <label>Anchura:</label>
-                        <input
-                          type="number"
-                          value={trenchParams.width}
-                          onChange={(e) =>
-                            setTrenchParams((prev) => ({
-                              ...prev,
-                              width: parseFloat(e.target.value) || 2.0,
-                            }))
-                          }
-                          className="w-16 px-1 py-0.5 bg-black/50 rounded text-center"
-                          step="0.1"
-                          min="0.5"
-                          max="10"
-                        />
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Instrucciones */}
-                  {(isCreatingVial || isTrenchMode) && (
-                    <div className="text-xs text-white bg-black/30 p-2 rounded">
-                      <p className="font-medium mb-1">Instrucciones:</p>
-                      <p>1. Haz clic para marcar el punto inicial</p>
-                      <p>2. Haz clic para marcar el punto final</p>
-                      {isCreatingVial && (
-                        <p className="text-orange-300 mt-1">
-                          ⚠️ Los viales eliminarán automáticamente todos los
-                          paneles en su trayecto
-                        </p>
-                      )}
-                      {isTrenchMode && (
-                        <p className="text-amber-300 mt-1">
-                          ⚠️ Las zanjas solo se pueden crear en espacios sin
-                          paneles
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    {/* Instrucciones */}
+                    {(isCreatingVial || isTrenchMode) && (
+                      <div className="text-xs text-white bg-black/30 p-2 rounded">
+                        <p className="font-medium mb-1">Instrucciones:</p>
+                        <p>1. Haz clic para marcar el punto inicial</p>
+                        <p>2. Haz clic para marcar el punto final</p>
+                        {isCreatingVial && (
+                          <p className="text-orange-300 mt-1">
+                            ⚠️ Los viales eliminarán automáticamente todos los
+                            paneles en su trayecto
+                          </p>
+                        )}
+                        {isTrenchMode && (
+                          <p className="text-amber-300 mt-1">
+                            ⚠️ Las zanjas solo se pueden crear en espacios sin
+                            paneles
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
           </div>
         </div>
       </div>

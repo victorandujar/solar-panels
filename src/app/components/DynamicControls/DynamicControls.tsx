@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo, useCallback } from "react";
+import React, { useRef, useMemo, useCallback, useEffect } from "react";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import solarData from "../../../utils/ObjEyeshot.json";
@@ -18,8 +18,69 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
   maxDistance,
   modifyLayout,
 }) => {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const controlsRef = useRef<any>(null);
+
+  // Guardar la posición original de la cámara
+  const originalCameraPosition = useRef({ x: 0, y: 0, z: 0 });
+  const originalTarget = useRef({ x: 0, y: 0, z: 0 });
+
+  // Guardar referencia a los controles en el canvas para TransformControls
+  useEffect(() => {
+    if (controlsRef.current) {
+      (gl.domElement as any).__orbitControls = controlsRef.current;
+    }
+  }, [gl]);
+
+  // Cuando entra en modo edición, cambiar a vista superior y hacer zoom más cercano
+  useEffect(() => {
+    if (!controlsRef.current) return;
+
+    if (modifyLayout) {
+      // Guardar posición actual SOLO la primera vez que se activa modo edición
+      if (
+        originalCameraPosition.current.x === 0 &&
+        originalCameraPosition.current.y === 0 &&
+        originalCameraPosition.current.z === 0
+      ) {
+        originalCameraPosition.current = {
+          x: camera.position.x,
+          y: camera.position.y,
+          z: camera.position.z,
+        };
+        originalTarget.current = {
+          x: controlsRef.current.target.x,
+          y: controlsRef.current.target.y,
+          z: controlsRef.current.target.z,
+        };
+      }
+
+      // Cambiar a vista superior (ortogonal desde arriba) con zoom equilibrado
+      // Un poco más alejado para que no corte con el header (1.25 en lugar de 1.1)
+      const topViewHeight = maxDistance * 1.25; // Equilibrado y sin que corte el header
+      camera.position.set(centroid.x, centroid.y, topViewHeight);
+      controlsRef.current.target.set(centroid.x, centroid.y, 0);
+      camera.up.set(0, 1, 0); // Asegurar que el "arriba" sea el eje Y
+      controlsRef.current.update();
+    } else if (
+      originalCameraPosition.current.x !== 0 ||
+      originalCameraPosition.current.y !== 0 ||
+      originalCameraPosition.current.z !== 0
+    ) {
+      // Solo restaurar si hemos guardado una posición previamente
+      camera.position.set(
+        originalCameraPosition.current.x,
+        originalCameraPosition.current.y,
+        originalCameraPosition.current.z,
+      );
+      controlsRef.current.target.set(
+        originalTarget.current.x,
+        originalTarget.current.y,
+        originalTarget.current.z,
+      );
+      controlsRef.current.update();
+    }
+  }, [modifyLayout, camera, centroid, maxDistance]);
 
   const lastGroupCenter = useMemo(() => {
     const { agrupaciones } = solarData as SolarData;
@@ -106,21 +167,21 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
   return (
     <OrbitControls
       ref={controlsRef}
-      enabled={!modifyLayout}
-      enableDamping={!modifyLayout}
-      enablePan={!modifyLayout}
-      enableZoom={!modifyLayout}
-      enableRotate={!modifyLayout}
+      enabled={true}
+      enableDamping={true}
+      enablePan={true}
+      enableZoom={true}
+      enableRotate={!modifyLayout} // Solo permitir rotación cuando NO esté en modo edición
       dampingFactor={0.1}
       screenSpacePanning
       minDistance={10}
       maxDistance={maxDistance * 3}
       target={[centroid.x, centroid.y, centroid.z]}
-      maxPolarAngle={Math.PI * 0.8}
-      minPolarAngle={Math.PI * 0.1}
-      panSpeed={1.0}
+      maxPolarAngle={Math.PI * 0.8} // Límite normal de rotación
+      minPolarAngle={Math.PI * 0.1} // Límite normal de rotación
+      panSpeed={modifyLayout ? 1.5 : 1.0}
       rotateSpeed={0.8}
-      zoomSpeed={0.8}
+      zoomSpeed={modifyLayout ? 1.2 : 0.8}
       onChange={modifyLayout ? undefined : handleZoom}
     />
   );

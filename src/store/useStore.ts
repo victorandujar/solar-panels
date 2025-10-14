@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import solarData from "../utils/ObjEyeshot.json";
+import { TransformControls } from "three/addons/controls/TransformControls.js";
 
-// Types para los paneles
 export interface Point {
   X: number;
   Y: number;
@@ -45,6 +45,7 @@ export interface SolarPanelState {
   groups: PanelGroup[];
   panels: Panel[];
   vials: Vial[];
+  translationSnap: number; // Snap value for panel movement (world units)
 
   disablePanels: (ids: string[]) => void;
   enablePanel: (id: string) => void;
@@ -68,6 +69,7 @@ export interface SolarPanelState {
   updateGroupName: (groupId: string, name: string) => void;
   updateGroupColor: (groupId: string, color: string) => void;
   updatePanelPosition: (panelId: string, position: Point) => void;
+  setTranslationSnap: (snap: number) => void;
 
   addVial: (
     start: Point,
@@ -170,10 +172,15 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
   groups: [],
   panels: [],
   vials: [],
+  translationSnap: 1.0, // Default snap value (1 meter)
 
   initializePanels: () => {
     const { groups, panels } = generateInitialPanels();
     set({ groups, panels });
+  },
+
+  setTranslationSnap: (snap: number) => {
+    set({ translationSnap: snap });
   },
 
   disablePanels: (ids: string[]) => {
@@ -544,14 +551,24 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
 
   updatePanelPosition: (panelId: string, position: Point) => {
     set((state) => {
+      const gridSize = state.translationSnap;
+
+      // Apply snapping based on translationSnap value
+      const snappedPosition: Point = {
+        X: Math.round(position.X / gridSize) * gridSize,
+        Y: Math.round(position.Y / gridSize) * gridSize,
+        Z: Math.round(position.Z / gridSize) * gridSize,
+      };
       const newPanels = state.panels.map((panel) =>
-        panel.id === panelId ? { ...panel, position } : panel,
+        panel.id === panelId ? { ...panel, position: snappedPosition } : panel,
       );
 
       const newGroups = state.groups.map((group) => ({
         ...group,
         panels: group.panels.map((panel) =>
-          panel.id === panelId ? { ...panel, position } : panel,
+          panel.id === panelId
+            ? { ...panel, position: snappedPosition }
+            : panel,
         ),
       }));
 
@@ -1016,4 +1033,12 @@ export const useVial = (vialId: string) => {
   return useSolarPanelStore((state) =>
     state.vials.find((v) => v.id === vialId),
   );
+};
+
+export const useTranslationSnap = () => {
+  return useSolarPanelStore((state) => state.translationSnap);
+};
+
+export const useSetTranslationSnap = () => {
+  return useSolarPanelStore((state) => state.setTranslationSnap);
 };

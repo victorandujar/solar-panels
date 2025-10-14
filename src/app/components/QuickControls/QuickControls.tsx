@@ -1,7 +1,12 @@
 "use client";
 
 import React from "react";
-import { useSolarPanelStore, usePanelStats } from "../../../store/useStore";
+import {
+  useSolarPanelStore,
+  usePanelStats,
+  useTranslationSnap,
+  useSetTranslationSnap,
+} from "../../../store/useStore";
 import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
 import NotificationDialog from "../NotificationDialog/NotificationDialog";
 import { useDialog } from "../../hooks/useDialog";
@@ -16,6 +21,8 @@ const QuickControls: React.FC<QuickControlsProps> = ({ className = "" }) => {
   const disableAllPanels = useSolarPanelStore(
     (state) => state.disableAllPanels,
   );
+  const translationSnap = useTranslationSnap();
+  const setTranslationSnap = useSetTranslationSnap();
 
   const {
     confirmDialog,

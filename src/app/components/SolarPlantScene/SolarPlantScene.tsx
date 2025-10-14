@@ -4,9 +4,11 @@ import React, { useMemo, createElement } from "react";
 import * as THREE from "three";
 import solarData from "../../../utils/ObjEyeshot.json";
 import SolarPanel from "../SolarPanel/SolarPanel";
+import SolarPanelWithTransform from "../SolarPanelWithTransform/SolarPanelWithTransform";
 import Terrain from "../Terrain/Terrain";
 import Fence from "../Fence/Fence";
 import DynamicControls from "../DynamicControls/DynamicControls";
+import SnapGrid from "../SnapGrid/SnapGrid";
 import {
   useAllPanelStates,
   useSolarPanelStore,
@@ -135,27 +137,52 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
 
       <Fence parcela={parcela} height={0.5} color={0x00ff00} lineWidth={4} />
 
-      {panels.map((panel) => (
-        <SolarPanel
-          key={panel.panelId}
-          position={panel.position}
-          rotation={panel.rotation}
-          groupId={panel.groupId}
-          panelId={panel.panelId}
-          dimensions={panel.dimensions}
-          inclination={panel.inclination}
-          color={panel.color}
-          isSelected={!!selectedGroup && selectedGroup !== panel.groupId}
-          isGroupSelected={selectedGroup === panel.groupId}
-          isHighlighted={selectedPanels.has(panel.panelId)}
-          isSelectedForDeletion={selectedPanelsForDeletion.has(panel.panelId)}
-          isActive={panelStates[panel.panelId] ?? true}
-          onClick={onPanelClick}
-          modifyLayout={modifyLayout}
-          onPositionChange={onPositionChange}
-          onGroupChange={onGroupChange}
-        />
-      ))}
+      {/* Mostrar cuadrícula de snap solo en modo edición */}
+      <SnapGrid
+        visible={modifyLayout}
+        parcela={parcela}
+        panelDimensions={{ length: longitud, width: ancho }}
+      />
+
+      {panels.map((panel) =>
+        modifyLayout && selectedPanels.has(panel.panelId) ? (
+          // Usar TransformControls cuando está en modo edición Y seleccionado
+          <SolarPanelWithTransform
+            key={panel.panelId}
+            position={panel.position}
+            rotation={panel.rotation}
+            groupId={panel.groupId}
+            panelId={panel.panelId}
+            dimensions={panel.dimensions}
+            color={panel.color}
+            isSelected={true}
+            isActive={panelStates[panel.panelId] ?? true}
+            onClick={onPanelClick}
+            onPositionChange={onPositionChange}
+          />
+        ) : (
+          // Usar componente normal en todos los demás casos
+          <SolarPanel
+            key={panel.panelId}
+            position={panel.position}
+            rotation={panel.rotation}
+            groupId={panel.groupId}
+            panelId={panel.panelId}
+            dimensions={panel.dimensions}
+            inclination={panel.inclination}
+            color={panel.color}
+            isSelected={!!selectedGroup && selectedGroup !== panel.groupId}
+            isGroupSelected={selectedGroup === panel.groupId}
+            isHighlighted={selectedPanels.has(panel.panelId)}
+            isSelectedForDeletion={selectedPanelsForDeletion.has(panel.panelId)}
+            isActive={panelStates[panel.panelId] ?? true}
+            onClick={onPanelClick}
+            modifyLayout={modifyLayout}
+            onPositionChange={onPositionChange}
+            onGroupChange={onGroupChange}
+          />
+        ),
+      )}
 
       <DynamicControls
         centroid={centroid}

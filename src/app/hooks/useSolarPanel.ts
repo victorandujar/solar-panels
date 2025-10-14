@@ -6,6 +6,7 @@ import { useDrag } from "@use-gesture/react";
 import * as THREE from "three";
 import solarData from "../../utils/ObjEyeshot.json";
 import { SolarData } from "../types/solar-types";
+import { useTranslationSnap } from "@/store/useStore";
 
 interface UseSolarPanelProps {
   position: [number, number, number];
@@ -48,8 +49,24 @@ export const useSolarPanel = ({
   const [isSnapping, setIsSnapping] = useState(false);
   const [isRowSnapping, setIsRowSnapping] = useState(false);
   const { camera, raycaster, scene } = useThree();
+  const translationSnap = useTranslationSnap();
 
   const { parcela } = solarData as SolarData;
+
+  // Apply translation snap to coordinates
+  const applyTranslationSnap = useCallback(
+    (x: number, y: number, z: number): [number, number, number] => {
+      if (translationSnap === null || translationSnap === 0) {
+        return [x, y, z];
+      }
+      return [
+        Math.round(x / translationSnap) * translationSnap,
+        Math.round(y / translationSnap) * translationSnap,
+        Math.round(z / translationSnap) * translationSnap,
+      ];
+    },
+    [translationSnap],
+  );
 
   const getParcelBounds = useCallback(() => {
     if (!parcela || parcela.length === 0) {
@@ -503,14 +520,22 @@ export const useSolarPanel = ({
           finalPosition[1],
           finalPosition[2],
         );
+
+        // Apply translation snap to the final position
+        const snappedPosition = applyTranslationSnap(
+          clampedPosition[0],
+          clampedPosition[1],
+          clampedPosition[2],
+        );
+
         const isValid = isPointInParcel(
-          finalPosition[0],
-          finalPosition[1],
-          finalPosition[2],
+          snappedPosition[0],
+          snappedPosition[1],
+          snappedPosition[2],
         );
 
         return {
-          position: clampedPosition,
+          position: snappedPosition,
           isValid,
           isSnapping: snappingResult.isSnapping || rowSnappingResult.isSnapping,
           isRowSnapping: rowSnappingResult.isSnapping,
@@ -534,6 +559,7 @@ export const useSolarPanel = ({
       applyBoundaryResistance,
       applySnapping,
       applyRowSnapping,
+      applyTranslationSnap,
       position,
     ],
   );
