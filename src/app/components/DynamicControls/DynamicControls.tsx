@@ -3,6 +3,7 @@
 import React, { useRef, useMemo, useCallback, useEffect } from "react";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import { useSetTranslationSnap } from "@/store/useStore";
 import solarData from "../../../utils/ObjEyeshot.json";
 
 import { SolarData } from "../../types/solar-types";
@@ -20,10 +21,25 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
 }) => {
   const { camera, gl } = useThree();
   const controlsRef = useRef<any>(null);
+  const setTranslationSnap = useSetTranslationSnap();
 
   // Guardar la posición original de la cámara
   const originalCameraPosition = useRef({ x: 0, y: 0, z: 0 });
   const originalTarget = useRef({ x: 0, y: 0, z: 0 });
+
+  // Flag para rastrear si ya hemos hecho la transición inicial
+  const hasTransitionedToEditMode = useRef(false);
+  const previousModifyLayout = useRef(false);
+
+  // Refs para valores que necesitamos pero no queremos que disparen re-renders
+  const centroidRef = useRef(centroid);
+  const maxDistanceRef = useRef(maxDistance);
+
+  // Actualizar refs cuando cambien los valores
+  useEffect(() => {
+    centroidRef.current = centroid;
+    maxDistanceRef.current = maxDistance;
+  }, [centroid, maxDistance]);
 
   // Guardar referencia a los controles en el canvas para TransformControls
   useEffect(() => {
@@ -32,55 +48,97 @@ const DynamicControls: React.FC<DynamicControlsProps> = ({
     }
   }, [gl]);
 
-  // Cuando entra en modo edición, cambiar a vista superior y hacer zoom más cercano
+  // Cuando entra en modo edición, cambiar a vista superior SOLO UNA VEZ
   useEffect(() => {
     if (!controlsRef.current) return;
 
-    if (modifyLayout) {
-      // Guardar posición actual SOLO la primera vez que se activa modo edición
-      if (
-        originalCameraPosition.current.x === 0 &&
-        originalCameraPosition.current.y === 0 &&
-        originalCameraPosition.current.z === 0
-      ) {
-        originalCameraPosition.current = {
-          x: camera.position.x,
-          y: camera.position.y,
-          z: camera.position.z,
-        };
-        originalTarget.current = {
-          x: controlsRef.current.target.x,
-          y: controlsRef.current.target.y,
-          z: controlsRef.current.target.z,
-        };
-      }
+    // Detectar cambio de false a true (activar modo edición)
+    const justActivated = modifyLayout && !previousModifyLayout.current;
+    // Detectar cambio de true a false (desactivar modo edición)
+    const justDeactivated = !modifyLayout && previousModifyLayout.current;
 
-      // Cambiar a vista superior (ortogonal desde arriba) con zoom equilibrado
-      // Un poco más alejado para que no corte con el header (1.25 en lugar de 1.1)
-      const topViewHeight = maxDistance * 1.25; // Equilibrado y sin que corte el header
-      camera.position.set(centroid.x, centroid.y, topViewHeight);
-      controlsRef.current.target.set(centroid.x, centroid.y, 0);
-      camera.up.set(0, 1, 0); // Asegurar que el "arriba" sea el eje Y
-      controlsRef.current.update();
-    } else if (
-      originalCameraPosition.current.x !== 0 ||
-      originalCameraPosition.current.y !== 0 ||
-      originalCameraPosition.current.z !== 0
-    ) {
-      // Solo restaurar si hemos guardado una posición previamente
+    if (justActivated && !hasTransitionedToEditMode.current) {
+      // Ajustar snap fino para edición
+      setTranslationSnap(0.01);
+      // SOLO ejecutar cuando se ACTIVA el modo edición por primera vez
+
+      // Guardar posición actual antes de cambiar
+      originalCameraPosition.current = {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+      };
+      originalTarget.current = {
+        x: controlsRef.current.target.x,
+        y: controlsRef.current.target.y,
+        z: controlsRef.current.target.z,
+      };
+
+      // Cambiar a vista superior (ortogonal desde arriba)
+      const topViewHeight = maxDistanceRef.current * 1.25;
       camera.position.set(
-        originalCameraPosition.current.x,
-        originalCameraPosition.current.y,
-        originalCameraPosition.current.z,
+        centroidRef.current.x,
+        centroidRef.current.y,
+        topViewHeight,
       );
       controlsRef.current.target.set(
-        originalTarget.current.x,
-        originalTarget.current.y,
-        originalTarget.current.z,
+        centroidRef.current.x,
+        centroidRef.current.y,
+        0,
       );
+      camera.up.set(0, 1, 0);
       controlsRef.current.update();
+
+      hasTransitionedToEditMode.current = true;
+    } else if (justDeactivated) {
+      // Restaurar snap por defecto al salir
+      setTranslationSnap(1.0);
+      // Restaurar posición original al DESACTIVAR
+      if (
+        originalCameraPosition.current.x !== 0 ||
+        originalCameraPosition.current.y !== 0 ||
+        originalCameraPosition.current.z !== 0
+      ) {
+        camera.position.set(
+          originalCameraPosition.current.x,
+          originalCameraPosition.current.y,
+          originalCameraPosition.current.z,
+        );
+        controlsRef.current.target.set(
+          originalTarget.current.x,
+          originalTarget.current.y,
+          originalTarget.current.z,
+        );
+        controlsRef.current.update();
+      }
+
+      hasTransitionedToEditMode.current = false;
     }
-  }, [modifyLayout, camera, centroid, maxDistance]);
+
+    // Actualizar el estado anterior
+    previousModifyLayout.current = modifyLayout;
+  }, [modifyLayout, camera, setTranslationSnap]); // incluye setTranslationSnap usado dentro
+
+  // Mejorar el manejo del scroll en modo edición
+  useEffect(() => {
+    if (!modifyLayout || !controlsRef.current) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      // En modo edición, permitir zoom fluido con scroll
+      // Solo intervenir si no hay un drag activo
+      const isDragging = (gl.domElement as any).__isDragging;
+      if (isDragging) {
+        event.preventDefault();
+        return;
+      }
+    };
+
+    gl.domElement.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      gl.domElement.removeEventListener("wheel", handleWheel);
+    };
+  }, [modifyLayout, gl.domElement, setTranslationSnap]);
 
   const lastGroupCenter = useMemo(() => {
     const { agrupaciones } = solarData as SolarData;

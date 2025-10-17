@@ -106,88 +106,36 @@ const SnapGrid: React.FC<SnapGridProps> = ({
     [groups, panelDimensions],
   );
 
-  // Generar puntos de snap en las intersecciones de filas y columnas
+  // Generar puntos SOLO donde están los paneles existentes (SIMPLE)
   const snapPoints = useMemo(() => {
     const points: Array<[number, number, number]> = [];
     const pointSize: number[] = [];
     const pointColors: number[] = [];
 
-    // Calcular espaciado entre columnas
-    const columnSpacing =
-      columns.length > 1 ? columns[1] - columns[0] : panelDimensions.length;
-    const rowSpacing =
-      rows.length > 1 ? rows[1] - rows[0] : panelDimensions.width * 2;
+    // Usar un Set para evitar duplicados
+    const uniquePositions = new Set<string>();
 
-    // Generar filas extendidas (arriba y abajo)
-    const allRows: number[] = [...rows];
+    groups.forEach((group) => {
+      group.panels.forEach((panel) => {
+        const x = panel.position.X;
+        const y = panel.position.Y;
+        const z = panel.position.Z;
 
-    // Añadir filas arriba
-    if (rows.length > 0) {
-      for (let i = 1; i <= 5; i++) {
-        const newY = rows[0] - rowSpacing * i;
-        if (newY >= bounds.minY - 10) {
-          allRows.unshift(newY);
-        }
-      }
+        // Crear clave única redondeada para evitar duplicados
+        const key = `${Math.round(x * 100)},${Math.round(y * 100)}`;
 
-      // Añadir filas abajo
-      for (let i = 1; i <= 5; i++) {
-        const newY = rows[rows.length - 1] + rowSpacing * i;
-        if (newY <= bounds.maxY + 10) {
-          allRows.push(newY);
-        }
-      }
-    }
+        if (!uniquePositions.has(key)) {
+          uniquePositions.add(key);
 
-    // Generar columnas extendidas (izquierda y derecha)
-    const allColumns: number[] = [...columns];
-
-    if (columns.length > 0) {
-      // Añadir columnas a la izquierda
-      for (let i = 1; i <= 5; i++) {
-        const newX = columns[0] - columnSpacing * i;
-        if (newX >= bounds.minX - 10) {
-          allColumns.unshift(newX);
-        }
-      }
-
-      // Añadir columnas a la derecha
-      for (let i = 1; i <= 5; i++) {
-        const newX = columns[columns.length - 1] + columnSpacing * i;
-        if (newX <= bounds.maxX + 10) {
-          allColumns.push(newX);
-        }
-      }
-    }
-
-    // Generar puntos en todas las intersecciones
-    allRows.forEach((y) => {
-      allColumns.forEach((x) => {
-        // Verificar si el punto está dentro de la parcela
-        if (isPointInFence(x, y)) {
-          const occupied = isPositionOccupied(x, y);
-
-          points.push([x, y, bounds.avgZ + 0.5]); // Elevado para que se vea sobre el terreno
-          pointSize.push(occupied ? 8.0 : 10.0); // Ocupados un poco más pequeños
-
-          if (occupied) {
-            pointColors.push(1, 0, 0); // ROJO para ocupados
-          } else {
-            pointColors.push(0, 1, 0); // VERDE para disponibles
-          }
+          points.push([x, y, z + 0.3]); // Elevado sobre la placa
+          pointSize.push(6.0); // Tamaño fijo
+          pointColors.push(0, 1, 0); // VERDE
         }
       });
     });
 
     return { points, pointSize, pointColors };
-  }, [
-    rows,
-    columns,
-    bounds,
-    panelDimensions,
-    isPositionOccupied,
-    isPointInFence,
-  ]);
+  }, [groups]);
 
   // Crear geometría de puntos
   const geometry = useMemo(() => {

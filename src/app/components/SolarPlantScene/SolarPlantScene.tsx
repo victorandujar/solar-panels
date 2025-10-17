@@ -46,6 +46,9 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
   const { agrupaciones, longitud, ancho, parcela, tilt } =
     solarData as SolarData;
 
+  // En modo edición, aumentar visualmente el espacio entre placas en X
+  const EDIT_LENGTH_SCALE_X = 1; // 0.9 => 10% más hueco en X
+
   const panelStates = useAllPanelStates();
   const groups = useSolarPanelStore((state: SolarPanelState) => state.groups);
 
@@ -96,17 +99,27 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       }
 
       group.panels.forEach((panel) => {
+        const isEdit = modifyLayout; // en edición dibujamos planos sin tilt
+        const rotation = isEdit
+          ? ([0, 0, 0] as [number, number, number])
+          : ([tiltRad, 0, 0] as [number, number, number]);
+        const positionZ = isEdit
+          ? panel.position.Z
+          : panel.position.Z + ancho / 2;
+        const effectiveLength = isEdit
+          ? longitud * EDIT_LENGTH_SCALE_X
+          : longitud;
         panelsList.push({
           groupId: panel.groupId,
           panelId: panel.id,
-          position: [
-            panel.position.X,
-            panel.position.Y,
-            panel.position.Z + ancho / 2,
-          ] as [number, number, number],
-          rotation: [tiltRad, 0, 0] as [number, number, number],
+          position: [panel.position.X, panel.position.Y, positionZ] as [
+            number,
+            number,
+            number,
+          ],
+          rotation,
           color,
-          dimensions: { length: longitud, width: ancho },
+          dimensions: { length: effectiveLength, width: ancho },
           inclination: tilt,
         });
       });
@@ -118,7 +131,7 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
       panels: panelsList,
       maxDistance,
     };
-  }, [agrupaciones, longitud, ancho, parcela, tilt, groups]);
+  }, [agrupaciones, longitud, ancho, parcela, tilt, groups, modifyLayout]);
 
   React.useEffect(() => {
     onCameraUpdate(legendData);
@@ -144,45 +157,28 @@ const SolarPlantScene: React.FC<SolarPlantSceneProps> = ({
         panelDimensions={{ length: longitud, width: ancho }}
       />
 
-      {panels.map((panel) =>
-        modifyLayout && selectedPanels.has(panel.panelId) ? (
-          // Usar TransformControls cuando está en modo edición Y seleccionado
-          <SolarPanelWithTransform
-            key={panel.panelId}
-            position={panel.position}
-            rotation={panel.rotation}
-            groupId={panel.groupId}
-            panelId={panel.panelId}
-            dimensions={panel.dimensions}
-            color={panel.color}
-            isSelected={true}
-            isActive={panelStates[panel.panelId] ?? true}
-            onClick={onPanelClick}
-            onPositionChange={onPositionChange}
-          />
-        ) : (
-          // Usar componente normal en todos los demás casos
-          <SolarPanel
-            key={panel.panelId}
-            position={panel.position}
-            rotation={panel.rotation}
-            groupId={panel.groupId}
-            panelId={panel.panelId}
-            dimensions={panel.dimensions}
-            inclination={panel.inclination}
-            color={panel.color}
-            isSelected={!!selectedGroup && selectedGroup !== panel.groupId}
-            isGroupSelected={selectedGroup === panel.groupId}
-            isHighlighted={selectedPanels.has(panel.panelId)}
-            isSelectedForDeletion={selectedPanelsForDeletion.has(panel.panelId)}
-            isActive={panelStates[panel.panelId] ?? true}
-            onClick={onPanelClick}
-            modifyLayout={modifyLayout}
-            onPositionChange={onPositionChange}
-            onGroupChange={onGroupChange}
-          />
-        ),
-      )}
+      {panels.map((panel) => (
+        // Usar siempre SolarPanel que ya tiene drag funcional
+        <SolarPanel
+          key={panel.panelId}
+          position={panel.position}
+          rotation={panel.rotation}
+          groupId={panel.groupId}
+          panelId={panel.panelId}
+          dimensions={panel.dimensions}
+          inclination={panel.inclination}
+          color={panel.color}
+          isSelected={!!selectedGroup && selectedGroup !== panel.groupId}
+          isGroupSelected={selectedGroup === panel.groupId}
+          isHighlighted={selectedPanels.has(panel.panelId)}
+          isSelectedForDeletion={selectedPanelsForDeletion.has(panel.panelId)}
+          isActive={panelStates[panel.panelId] ?? true}
+          onClick={onPanelClick}
+          modifyLayout={modifyLayout}
+          onPositionChange={onPositionChange}
+          onGroupChange={onGroupChange}
+        />
+      ))}
 
       <DynamicControls
         centroid={centroid}

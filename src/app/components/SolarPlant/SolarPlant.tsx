@@ -8,7 +8,8 @@ import React, {
   useCallback,
 } from "react";
 import * as THREE from "three";
-import { PerspectiveCamera } from "@react-three/drei";
+import { PerspectiveCamera, OrthographicCamera } from "@react-three/drei";
+import AdaptiveOrthographicCamera from "../AdaptiveOrthographicCamera/AdaptiveOrthographicCamera";
 import Modal from "../Modal/Modal";
 import SolarPanelDetail from "../SolarPanelDetail/SolarPanelDetail";
 import GroupSelector from "../GroupSelector/GroupSelector";
@@ -153,13 +154,27 @@ const SolarPanelLayout: React.FC = () => {
   const sceneContent = useMemo(
     () => (
       <>
-        <PerspectiveCamera
-          makeDefault
-          fov={75}
-          near={0.1}
-          far={10000}
-          position={cameraPosition}
-        />
+        {state.modifyLayout ? (
+          // Cámara ortográfica adaptativa (sin perspectiva) en modo edición
+          // Scale controla el tamaño visual - valores más altos = más alejado
+          <AdaptiveOrthographicCamera
+            position={[
+              cameraPosition[0],
+              cameraPosition[1],
+              Math.max(cameraPosition[2], 400),
+            ]}
+            scale={950}
+          />
+        ) : (
+          // Cámara con perspectiva en modo normal
+          <PerspectiveCamera
+            makeDefault
+            fov={75}
+            near={0.1}
+            far={10000}
+            position={cameraPosition}
+          />
+        )}
         <SolarPlantScene
           selectedGroup={state.selectedGroup}
           selectedPanels={state.selectedPanels}
@@ -310,9 +325,47 @@ const SolarPanelLayout: React.FC = () => {
               )}
             </section>
 
+            {state.modifyLayout && (
+              <section className="md:fixed md:top-[42%] md:left-[27%] z-20 w-full 2xl:relative 2xl:top-0 2xl:left-0">
+                <div className="flex flex-col gap-2 w-60 backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-black mb-2">
+                    🖱️ Controles del Ratón
+                  </h3>
+
+                  <div className="flex items-start gap-3 p-2 bg-blue-500/20 rounded border border-blue-400/30">
+                    <span className="text-lg">🖱️</span>
+                    <div className="text-xs text-black">
+                      <p className="font-semibold">Botón Izquierdo</p>
+                      <p className="text-gray-700">
+                        Selecciona y mueve placas con snap automático
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-2 bg-purple-500/20 rounded border border-purple-400/30">
+                    <span className="text-lg">↔️</span>
+                    <div className="text-xs text-black">
+                      <p className="font-semibold">Botón Derecho</p>
+                      <p className="text-gray-700">
+                        Desplaza la cámara en X e Y
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-2 bg-green-500/20 rounded border border-green-400/30">
+                    <span className="text-lg">🔍</span>
+                    <div className="text-xs text-black">
+                      <p className="font-semibold">Rueda del Ratón</p>
+                      <p className="text-gray-700">Zoom in/out de la vista</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {!state.modifyLayout && (
               <section className="md:fixed md:top-[35%] md:left-[27%] z-20 w-full 2xl:relative 2xl:top-0 2xl:left-0">
-                <div className="flex flex-col gap-2 w-60 backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-white 2xl:text-black ${className} z-50">
+                <div className="flex flex-col gap-2 w-60 backdrop-blur-sm border border-mainColor/30 transition-all duration-500 ease-in-out bg-black/10 rounded-lg p-4 md:text-black 2xl:text-black ${className} z-50">
                   <h3 className="text-sm font-medium text-black mb-2 flex items-center gap-2">
                     <FaRoad /> Viales y Zanjas
                   </h3>

@@ -551,14 +551,15 @@ export const useSolarPanelStore = create<SolarPanelState>((set, get) => ({
 
   updatePanelPosition: (panelId: string, position: Point) => {
     set((state) => {
-      const gridSize = state.translationSnap;
-
-      // Apply snapping based on translationSnap value
+      // NO aplicar snap adicional aquí
+      // El componente SolarPanelWithTransform ya hace su propio snap inteligente
+      // que respeta el espaciado real de la cuadrícula
       const snappedPosition: Point = {
-        X: Math.round(position.X / gridSize) * gridSize,
-        Y: Math.round(position.Y / gridSize) * gridSize,
-        Z: Math.round(position.Z / gridSize) * gridSize,
+        X: position.X,
+        Y: position.Y,
+        Z: position.Z,
       };
+
       const newPanels = state.panels.map((panel) =>
         panel.id === panelId ? { ...panel, position: snappedPosition } : panel,
       );

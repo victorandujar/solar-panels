@@ -233,13 +233,30 @@ export const useSolarPanel = ({
     [isPointInFence, findClosestPointInFence],
   );
 
+  // ESPACIADO FIJO BASADO EN EL JSON ORIGINAL
+  // Del JSON: X va de 290.506 a 304.486 = 13.98 metros
+  // Del JSON: Y va de 177.070 a 168.070 = 9 metros
+  const GRID_STEP_X = 13.98; // Espaciado horizontal FIJO
+  const GRID_STEP_Y = 9.0; // Espaciado vertical FIJO
+
+  const getRealGridSpacing = useCallback((): {
+    stepX: number;
+    stepY: number;
+  } => {
+    return {
+      stepX: GRID_STEP_X,
+      stepY: GRID_STEP_Y,
+    };
+  }, []);
+
   const applySnapping = useCallback(
     (
       x: number,
       y: number,
       z: number,
     ): { position: [number, number, number]; isSnapping: boolean } => {
-      const snappingDistance = dimensions.length * 0.8;
+      const { stepX, stepY } = getRealGridSpacing();
+      const snappingDistance = Math.max(stepX, stepY) * 0.8;
       const snappingTolerance = 8;
       let snappedX = x;
       let snappedY = y;
@@ -259,14 +276,12 @@ export const useSolarPanel = ({
           );
 
           if (distance < snappingDistance && distance > 0) {
-            const panelWidth = dimensions.width;
-            const panelLength = dimensions.length;
-
+            // Usar spacing REAL en lugar de dimensiones
             const possiblePositions = [
-              { x: child.position.x + panelLength, y: child.position.y },
-              { x: child.position.x - panelLength, y: child.position.y },
-              { x: child.position.x, y: child.position.y + panelWidth },
-              { x: child.position.x, y: child.position.y - panelWidth },
+              { x: child.position.x + stepX, y: child.position.y },
+              { x: child.position.x - stepX, y: child.position.y },
+              { x: child.position.x, y: child.position.y + stepY },
+              { x: child.position.x, y: child.position.y - stepY },
             ];
 
             for (const pos of possiblePositions) {
@@ -293,7 +308,7 @@ export const useSolarPanel = ({
         isSnapping,
       };
     },
-    [dimensions.length, dimensions.width, scene],
+    [scene, getRealGridSpacing],
   );
 
   const detectRows = useCallback(() => {
@@ -315,6 +330,8 @@ export const useSolarPanel = ({
         });
       }
     });
+
+    const { stepX } = getRealGridSpacing();
 
     const rows: Array<{
       y: number;
@@ -343,27 +360,18 @@ export const useSolarPanel = ({
           panels: [panel],
           minX: panel.x,
           maxX: panel.x,
-          spacing: dimensions.length,
+          spacing: stepX,
         });
       }
     });
 
     rows.forEach((row) => {
-      if (row.panels.length > 1) {
-        const sortedPanels = row.panels.sort((a, b) => a.x - b.x);
-        const spacings: number[] = [];
-
-        for (let i = 1; i < sortedPanels.length; i++) {
-          spacings.push(sortedPanels[i].x - sortedPanels[i - 1].x);
-        }
-
-        row.spacing =
-          spacings.reduce((sum, spacing) => sum + spacing, 0) / spacings.length;
-      }
+      // SIEMPRE usar stepX fijo del JSON, no promediar
+      row.spacing = stepX;
     });
 
     return rows;
-  }, [dimensions.width, dimensions.length, scene]);
+  }, [dimensions.width, scene, getRealGridSpacing]);
 
   const isVeryCloseToRow = useCallback(
     (x: number, y: number): boolean => {
